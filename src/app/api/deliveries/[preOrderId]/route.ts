@@ -13,11 +13,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ pre
       throw new ApiError('forbidden', 'Only logistics or farmer can update delivery', 403);
     }
 
-    const { status, trackingNote } = await request.json();
+    const { status, trackingNote, actualQuantity, proofPhotoUrl } = await request.json();
     if (!ALLOWED_STATUSES.includes(status)) {
       throw new ApiError('invalid_status', 'status must be in_transit or delivered', 400);
     }
-    const record = await updateDeliveryStatus(preOrderId, user, status, trackingNote);
+    const record = await updateDeliveryStatus(preOrderId, user, status, trackingNote, {
+      actualQuantity: actualQuantity !== undefined ? Number(actualQuantity) : undefined,
+      proofPhotoUrl,
+    });
     console.log(`delivery updated preOrderId=${preOrderId} status=${status}`);
     return Response.json(record);
   } catch (err) {

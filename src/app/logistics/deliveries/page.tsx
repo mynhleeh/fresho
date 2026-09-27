@@ -7,10 +7,12 @@ import { StatusBadge } from '../../components/StatusBadge';
 import { preOrderStatusInfo } from '@/lib/orderStatus';
 import styles from './page.module.css';
 
-type Delivery = { preOrderId: string; status: string; preOrder: { batch: { cropName: string }; buyer: { name: string } } };
+type Delivery = { preOrderId: string; status: string; preOrder: { quantity: number; batch: { cropName: string }; buyer: { name: string } } };
 
 export default function LogisticsDeliveries() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [actualQuantities, setActualQuantities] = useState<Record<string, number>>({});
+  const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
 
   async function load() {
     const res = await fetch('/api/deliveries/mine');
@@ -20,11 +22,16 @@ export default function LogisticsDeliveries() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
   useEffect(() => { load(); }, []);
 
-  async function update(preOrderId: string, status: 'in_transit' | 'delivered') {
+  async function update(preOrderId: string, status: 'in_transit' | 'delivered', reservedQuantity?: number) {
+    const body: Record<string, unknown> = { status };
+    if (status === 'delivered') {
+      body.actualQuantity = actualQuantities[preOrderId] ?? reservedQuantity;
+      body.proofPhotoUrl = proofUrls[preOrderId] || undefined;
+    }
     await fetch(`/api/deliveries/${preOrderId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(body),
     });
     load();
   }
@@ -49,7 +56,21 @@ export default function LogisticsDeliveries() {
                 </div>
                 <StatusBadge label={status.label} tone={status.tone} />
                 {d.status === 'ready_for_handover' && <Button onClick={() => update(d.preOrderId, 'in_transit')}>Bắt đầu vận chuyển</Button>}
-                {d.status === 'in_transit' && <Button onClick={() => update(d.preOrderId, 'delivered')}>Đã giao</Button>}
+                {d.status === 'in_transit' && (
+                  <div className={styles.handoverPanel}>
+                    <input
+                      type="number"
+                      placeholder={`Số lượng thực nhận (đặt ${d.preOrder.quantity})`}
+                      onChange={(e) => setActualQuantities({ ...actualQuantities, [d.preOrderId]: Number(e.target.value) })}
+                    />
+                    <input
+                      type="text"
+                      placeholder="URL ảnh bằng chứng bàn giao"
+                      onChange={(e) => setProofUrls({ ...proofUrls, [d.preOrderId]: e.target.value })}
+                    />
+                    <Button onClick={() => update(d.preOrderId, 'delivered', d.preOrder.quantity)}>Đã giao</Button>
+                  </div>
+                )}
               </Card>
             );
           })}

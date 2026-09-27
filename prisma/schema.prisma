@@ -153,6 +153,8 @@ model DeliveryRecord {
   method             String
   status             String   @default("ready_for_handover")
   trackingNote       String?  @map("tracking_note")
+  actualQuantity     Int?     @map("actual_quantity")
+  proofPhotoUrl      String?  @map("proof_photo_url")
   updatedAt          DateTime       @updatedAt @map("updated_at")
 
   @@map("delivery_records")

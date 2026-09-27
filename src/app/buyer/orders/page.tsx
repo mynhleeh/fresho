@@ -22,6 +22,17 @@ export default function BuyerOrders() {
     fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)).then((u) => setUserId(u?.id ?? null));
   }, []);
 
+  async function reportIssue(preOrderId: string) {
+    const reason = prompt('Mô tả vấn đề (giao chậm, thiếu hàng, sai chất lượng...)');
+    if (!reason || !reason.trim()) return;
+    await fetch('/api/disputes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preOrderId, reason }),
+    });
+    alert('Đã gửi báo cáo vấn đề, đội ngũ hỗ trợ sẽ xử lý.');
+  }
+
   async function confirmReceipt(o: PreOrder) {
     const shippingFee = shippingFees[o.id] ?? 0;
     await fetch(`/api/preorders/${o.id}/confirm-receipt`, {
@@ -60,6 +71,9 @@ export default function BuyerOrders() {
                   <HarvestProgressLog batchId={o.batch.id} />
                 )}
                 {userId && <OrderMessageThread preOrderId={o.id} currentUserId={userId} />}
+                {(o.status === 'in_transit' || o.status === 'delivered') && (
+                  <Button variant="outline" onClick={() => reportIssue(o.id)}>Báo vấn đề</Button>
+                )}
                 {o.status === 'delivered' && (
                   <div className={styles.settleRow}>
                     <label htmlFor={`fee-${o.id}`}>Cước vận chuyển thực tế</label>
