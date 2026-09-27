@@ -2,32 +2,44 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
+import {
+  ClipboardOrdersIcon,
+  HarvestBatchIcon,
+  LeafIcon,
+  LogisticsTruckIcon,
+  PlusIcon,
+  SearchIcon,
+  SettingsGearIcon,
+  WarningIcon,
+} from './icons';
+import { ROLE_NAV_LINKS, type AppRole } from './roleNav';
 import styles from './AppShell.module.css';
 
-type Role = 'farmer' | 'buyer' | 'admin' | 'logistics';
+type Role = AppRole;
 
 type NavItem = {
   href: string;
   label: string;
-  icon: string;
+  Icon: ComponentType<{ className?: string }>;
 };
 
-const NAV_BY_ROLE: Record<Role, NavItem[]> = {
-  farmer: [
-    { href: '/farmer/batches', label: 'Mùa vụ', icon: '\u{1F331}' },
-    { href: '/farmer/orders', label: 'Đơn hàng', icon: '\u{1F4CB}' },
-  ],
-  buyer: [
-    { href: '/buyer/marketplace', label: 'Tìm nông sản', icon: '\u{1F50D}' },
-    { href: '/buyer/orders', label: 'Đơn hàng', icon: '\u{1F4CB}' },
-  ],
-  admin: [
-    { href: '/admin/orders', label: 'Đơn hàng', icon: '\u{1F4CB}' },
-    { href: '/admin/disputes', label: 'Khiếu nại', icon: '\u{26A0}\u{FE0F}' },
-  ],
-  logistics: [{ href: '/logistics/deliveries', label: 'Vận chuyển', icon: '\u{1F69A}' }],
+const NAV_ICON_BY_HREF: Record<string, ComponentType<{ className?: string }>> = {
+  '/farmer/batches': HarvestBatchIcon,
+  '/farmer/orders': ClipboardOrdersIcon,
+  '/buyer/marketplace': SearchIcon,
+  '/buyer/orders': ClipboardOrdersIcon,
+  '/admin/orders': ClipboardOrdersIcon,
+  '/admin/disputes': WarningIcon,
+  '/logistics/deliveries': LogisticsTruckIcon,
 };
+
+function navItemsForRole(role: Role): NavItem[] {
+  return ROLE_NAV_LINKS[role].map((link) => ({
+    ...link,
+    Icon: NAV_ICON_BY_HREF[link.href],
+  }));
+}
 
 const PRIMARY_ACTION: Record<Role, { href: string; label: string } | null> = {
   farmer: { href: '/farmer/batches', label: 'Đăng mùa vụ' },
@@ -38,18 +50,18 @@ const PRIMARY_ACTION: Record<Role, { href: string; label: string } | null> = {
 
 export function AppShell({ role, children }: { role: Role; children: ReactNode }) {
   const pathname = usePathname();
-  const navItems = NAV_BY_ROLE[role];
+  const navItems = navItemsForRole(role);
   const primaryAction = PRIMARY_ACTION[role];
 
   return (
     <div className={styles.shell}>
       <nav className={styles.sidebar}>
         <Link href="/" className={styles.logo} aria-label="FRESH O!">
-          <span className={styles.logoLeaf}>🍃</span>
+          <LeafIcon className={styles.logoLeaf} />
         </Link>
         {primaryAction && (
           <Link href={primaryAction.href} className={styles.primaryAction} title={primaryAction.label}>
-            +
+            <PlusIcon className={styles.primaryActionIcon} />
           </Link>
         )}
         <div className={styles.navItems}>
@@ -59,13 +71,13 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
               href={item.href}
               className={`${styles.navItem} ${pathname.startsWith(item.href) ? styles.navItemActive : ''}`}
             >
-              <span className={styles.navIcon}>{item.icon}</span>
+              <item.Icon className={styles.navIcon} />
               <span className={styles.navLabel}>{item.label}</span>
             </Link>
           ))}
         </div>
         <Link href="/" className={styles.exitLink} title="Đổi tài khoản">
-          ⚙️
+          <SettingsGearIcon className={styles.exitIcon} />
         </Link>
       </nav>
       <main className={styles.content}>{children}</main>
