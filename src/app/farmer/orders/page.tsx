@@ -4,6 +4,7 @@ import { AppShell } from '../../components/AppShell';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { StatusBadge } from '../../components/StatusBadge';
+import { OrderMessageThread } from '../../components/OrderMessageThread';
 import { formatVnd } from '../../components/MoneySummaryRow';
 import { preOrderStatusInfo } from '@/lib/orderStatus';
 import styles from './page.module.css';
@@ -12,14 +13,18 @@ type PreOrder = { id: string; status: string; quantity: number; pricePerUnit: nu
 
 export default function FarmerOrders() {
   const [orders, setOrders] = useState<PreOrder[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch('/api/preorders/for-farmer');
     setOrders(await res.json());
   }
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
+    load();
+    fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)).then((u) => setUserId(u?.id ?? null));
+  }, []);
 
   async function act(id: string, action: 'confirm' | 'reject') {
     await fetch(`/api/preorders/${id}/${action}`, { method: 'PATCH' });
@@ -58,6 +63,7 @@ export default function FarmerOrders() {
                   </div>
                   <StatusBadge label={status.label} tone={status.tone} />
                 </div>
+                {userId && <OrderMessageThread preOrderId={o.id} currentUserId={userId} />}
                 <div className={styles.orderActions}>
                   {o.status === 'pending_confirmation' && (
                     <>
