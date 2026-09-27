@@ -3,6 +3,8 @@ import { Nunito } from "next/font/google";
 import "./globals.css";
 import { RegisterServiceWorker } from "./register-sw";
 import { AuthProvider } from "./auth/AuthContext";
+import { CreateBatchPanelProvider } from "./farmer/batches/CreateBatchPanelContext";
+import { CreateBatchPanelHost } from "./farmer/batches/CreateBatchPanelHost";
 
 const appSans = Nunito({
   variable: "--font-app-sans",
@@ -25,8 +27,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="vi" className={appSans.variable}>
       <body>
         <AuthProvider>
-          {children}
-          <RegisterServiceWorker />
+          <CreateBatchPanelProvider>
+            {children}
+            <CreateBatchPanelHost />
+            <RegisterServiceWorker />
+          </CreateBatchPanelProvider>
         </AuthProvider>
       </body>
     </html>

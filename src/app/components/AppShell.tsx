@@ -14,6 +14,7 @@ import {
   WarningIcon,
 } from './icons';
 import { ROLE_NAV_LINKS, type AppRole } from './roleNav';
+import { useCreateBatchPanel } from '../farmer/batches/CreateBatchPanelContext';
 import styles from './AppShell.module.css';
 
 type Role = AppRole;
@@ -41,9 +42,13 @@ function navItemsForRole(role: Role): NavItem[] {
   }));
 }
 
-const PRIMARY_ACTION: Record<Role, { href: string; label: string } | null> = {
-  farmer: { href: '/farmer/batches?new=1', label: 'Đăng mùa vụ' },
-  buyer: { href: '/buyer/marketplace', label: 'Tìm nông sản' },
+type PrimaryAction =
+  | { kind: 'create-batch'; label: string }
+  | { kind: 'link'; href: string; label: string };
+
+const PRIMARY_ACTION: Record<Role, PrimaryAction | null> = {
+  farmer: { kind: 'create-batch', label: 'Đăng mùa vụ' },
+  buyer: { kind: 'link', href: '/buyer/marketplace', label: 'Tìm nông sản' },
   admin: null,
   logistics: null,
 };
@@ -52,6 +57,7 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
   const pathname = usePathname();
   const navItems = navItemsForRole(role);
   const primaryAction = PRIMARY_ACTION[role];
+  const createBatchPanel = useCreateBatchPanel();
 
   return (
     <div className={styles.shell}>
@@ -59,7 +65,17 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
         <Link href="/" className={styles.logo} aria-label="FRESH O!">
           <LeafIcon className={styles.logoLeaf} />
         </Link>
-        {primaryAction && (
+        {primaryAction?.kind === 'create-batch' && (
+          <button
+            type="button"
+            className={styles.primaryAction}
+            title={primaryAction.label}
+            onClick={createBatchPanel.open}
+          >
+            <PlusIcon className={styles.primaryActionIcon} />
+          </button>
+        )}
+        {primaryAction?.kind === 'link' && (
           <Link href={primaryAction.href} className={styles.primaryAction} title={primaryAction.label}>
             <PlusIcon className={styles.primaryActionIcon} />
           </Link>
