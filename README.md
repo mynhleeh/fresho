@@ -14,6 +14,25 @@ npx prisma db seed
 npm run dev
 ```
 
+## Quick Setup & Sync
+
+Just want the current working tree installed, migrated, and running? Run:
+
+```bash
+npm run setup
+```
+
+This single command (`scripts/setup.mjs`) does not touch git at all — it only looks at
+the files on disk:
+- hashes `package.json`/`package-lock.json` and runs `npm install` only if they changed
+  (or `node_modules` is missing) since the last `npm run setup`;
+- hashes everything under `prisma/` and runs `npx prisma migrate dev` only if it changed;
+- copies `.env.example` to `.env` if no `.env` exists yet;
+- starts `npx next dev`.
+
+It tracks the last-seen file hashes in `.cache/setup-state.json` (gitignored) to decide
+what changed between runs.
+
 Tests run against a separate SQLite database (`.env.test`, `DATABASE_URL="file:./test.db"`)
 so `npx vitest run` never touches your seeded `dev.db`. No manual setup is needed for it —
 `vitest.global-setup.ts` pushes the Prisma schema onto `test.db` automatically before the
