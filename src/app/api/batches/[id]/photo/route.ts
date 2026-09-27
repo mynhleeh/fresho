@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { getCurrentUser } from '@/lib/session';
-import { setBatchPhoto } from '@/lib/services/batchService';
+import { assertBatchOwnership, setBatchPhoto } from '@/lib/services/batchService';
 import { ApiError, errorResponse } from '@/lib/errors';
 
 const ALLOWED_TYPES: Record<string, string> = {
@@ -29,6 +29,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (file.size > MAX_BYTES) {
       throw new ApiError('invalid_input', 'photo must be 5MB or smaller', 400);
     }
+
+    await assertBatchOwnership(id, user.id);
 
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'batches');
     await mkdir(uploadDir, { recursive: true });

@@ -81,10 +81,15 @@ export async function updateBatch(
   return prisma.harvestBatch.update({ where: { id: batchId }, data: input });
 }
 
-export async function setBatchPhoto(batchId: string, farmerId: string, photoUrl: string) {
+export async function assertBatchOwnership(batchId: string, farmerId: string) {
   const batch = await prisma.harvestBatch.findUnique({ where: { id: batchId } });
   if (!batch) throw new ApiError('batch_not_found', 'Batch not found', 404);
   if (batch.farmerId !== farmerId) throw new ApiError('forbidden', 'Not your batch', 403);
+  return batch;
+}
+
+export async function setBatchPhoto(batchId: string, farmerId: string, photoUrl: string) {
+  await assertBatchOwnership(batchId, farmerId);
 
   return prisma.harvestBatch.update({
     where: { id: batchId },
