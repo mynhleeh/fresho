@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
  * rows that trip FK constraints when test files run together.
  */
 export async function cleanupDb() {
+  await prisma.rating.deleteMany();
   await prisma.disputeLog.deleteMany();
   await prisma.deliveryRecord.deleteMany();
   await prisma.ledgerEntry.deleteMany();

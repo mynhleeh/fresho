@@ -6,20 +6,27 @@ import { Button } from '../../components/Button';
 import { StatusBadge } from '../../components/StatusBadge';
 import { OrderMessageThread } from '../../components/OrderMessageThread';
 import { HarvestProgressLog } from '../../components/HarvestProgressLog';
+import { RatingForm } from '../../components/RatingForm';
 import { formatVnd } from '../../components/MoneySummaryRow';
 import { preOrderStatusInfo } from '@/lib/orderStatus';
 import styles from './page.module.css';
 
-type PreOrder = { id: string; status: string; quantity: number; pricePerUnit: number; shippingFeeQuote: number | null; batch: { id: string; cropName: string } };
+type PreOrder = { id: string; status: string; quantity: number; pricePerUnit: number; shippingFeeQuote: number | null; batch: { id: string; cropName: string }; ratings: { raterId: string }[] };
 
 export default function BuyerOrders() {
   const [orders, setOrders] = useState<PreOrder[]>([]);
   const [shippingFees, setShippingFees] = useState<Record<string, number>>({});
   const [userId, setUserId] = useState<string | null>(null);
 
+  async function load() {
+    const [ordersRes, meRes] = await Promise.all([fetch('/api/preorders/mine'), fetch('/api/auth/me')]);
+    setOrders(await ordersRes.json());
+    setUserId(meRes.ok ? (await meRes.json())?.id ?? null : null);
+  }
+
   useEffect(() => {
-    fetch('/api/preorders/mine').then((r) => r.json()).then(setOrders);
-    fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)).then((u) => setUserId(u?.id ?? null));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
+    load();
   }, []);
 
   async function reportIssue(preOrderId: string) {
@@ -86,6 +93,13 @@ export default function BuyerOrders() {
                     />
                     <Button onClick={() => confirmReceipt(o)}>Xác nhận nhận hàng & thanh toán</Button>
                   </div>
+                )}
+                {o.status === 'settled' && userId && (
+                  <RatingForm
+                    preOrderId={o.id}
+                    alreadyRated={o.ratings.some((r) => r.raterId === userId)}
+                    onSubmitted={load}
+                  />
                 )}
               </Card>
             );

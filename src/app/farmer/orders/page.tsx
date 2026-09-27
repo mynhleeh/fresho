@@ -5,11 +5,12 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { StatusBadge } from '../../components/StatusBadge';
 import { OrderMessageThread } from '../../components/OrderMessageThread';
+import { RatingForm } from '../../components/RatingForm';
 import { formatVnd } from '../../components/MoneySummaryRow';
 import { preOrderStatusInfo } from '@/lib/orderStatus';
 import styles from './page.module.css';
 
-type PreOrder = { id: string; status: string; quantity: number; pricePerUnit: number; batch: { cropName: string }; buyer: { name: string } };
+type PreOrder = { id: string; status: string; quantity: number; pricePerUnit: number; batch: { cropName: string }; buyer: { name: string }; ratings: { raterId: string }[] };
 
 export default function FarmerOrders() {
   const [orders, setOrders] = useState<PreOrder[]>([]);
@@ -75,6 +76,13 @@ export default function FarmerOrders() {
                     <Button onClick={() => markDelivered(o.id)}>Đã giao (tự lấy)</Button>
                   )}
                 </div>
+                {o.status === 'settled' && userId && (
+                  <RatingForm
+                    preOrderId={o.id}
+                    alreadyRated={o.ratings.some((r) => r.raterId === userId)}
+                    onSubmitted={load}
+                  />
+                )}
               </Card>
             );
           })}
