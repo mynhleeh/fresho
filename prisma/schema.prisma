@@ -13,6 +13,7 @@ model User {
   phone      String   @unique
   address    String
   passwordHash String @default("") @map("password_hash")
+  avatarUrl  String?  @map("avatar_url")
   role       String
   trustScore Int      @default(0) @map("trust_score")
   createdAt  DateTime @default(now()) @map("created_at")
@@ -61,13 +62,27 @@ model HarvestBatch {
   qualityStandard      String?     @map("quality_standard")
   minOrderQuantity     Int         @default(1) @map("min_order_quantity")
   description          String?     @map("description")
+  isHidden             Boolean     @default(false) @map("is_hidden")
   createdAt            DateTime    @default(now()) @map("created_at")
 
   preOrders        PreOrder[]
   progressUpdates  HarvestProgressUpdate[]
   savedBy          SavedBatch[]
+  photos           HarvestBatchPhoto[]
 
   @@map("harvest_batches")
+}
+
+model HarvestBatchPhoto {
+  id        String       @id @default(cuid())
+  batchId   String       @map("batch_id")
+  batch     HarvestBatch @relation(fields: [batchId], references: [id])
+  url       String
+  position  Int
+  isCover   Boolean      @default(false) @map("is_cover")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@map("harvest_batch_photos")
 }
 
 model SavedBatch {

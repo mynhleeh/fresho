@@ -12,6 +12,7 @@ import {
   PlusIcon,
   SearchIcon,
   SettingsGearIcon,
+  UserCircleIcon,
   WarningIcon,
 } from './icons';
 import { ROLE_NAV_LINKS, type AppRole } from './roleNav';
@@ -37,13 +38,14 @@ const NAV_ICON_BY_HREF: Record<string, ComponentType<{ className?: string }>> = 
 };
 
 const HOME_NAV_ITEM: NavItem = { href: '/dashboard', label: 'Trang chủ', Icon: HomeIcon };
+const ACCOUNT_NAV_ITEM: NavItem = { href: '/account', label: 'Tài khoản', Icon: UserCircleIcon };
 
 function navItemsForRole(role: Role): NavItem[] {
   const roleItems = ROLE_NAV_LINKS[role].map((link) => ({
     ...link,
     Icon: NAV_ICON_BY_HREF[link.href],
   }));
-  return [HOME_NAV_ITEM, ...roleItems];
+  return [HOME_NAV_ITEM, ...roleItems, ACCOUNT_NAV_ITEM];
 }
 
 type PrimaryAction =
