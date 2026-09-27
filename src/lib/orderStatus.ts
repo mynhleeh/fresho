@@ -17,6 +17,7 @@ const BATCH_STATUS: Record<string, { label: string; tone: StatusTone }> = {
   open: { label: 'Đang mở đặt trước', tone: 'success' },
   awaiting_harvest: { label: 'Chờ thu hoạch', tone: 'info' },
   ready_for_handover: { label: 'Sẵn sàng bàn giao', tone: 'info' },
+  closed: { label: 'Kết thúc mùa vụ', tone: 'neutral' },
 };
 
 export function preOrderStatusInfo(status: string) {

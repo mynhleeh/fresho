@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/session';
-import { updateBatch } from '@/lib/services/batchService';
+import { updateBatch, FARMER_SELECTABLE_BATCH_STATUSES } from '@/lib/services/batchService';
 import { ApiError, errorResponse } from '@/lib/errors';
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -31,10 +31,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (body.description !== undefined && typeof body.description !== 'string') {
       throw new ApiError('invalid_input', 'description must be a string', 400);
     }
+    if (body.status !== undefined && !FARMER_SELECTABLE_BATCH_STATUSES.includes(body.status)) {
+      throw new ApiError('invalid_input', `status must be one of ${FARMER_SELECTABLE_BATCH_STATUSES.join(', ')}`, 400);
+    }
 
     const allowedUpdates: Partial<{
       cropName: string; pricePerUnit: number; photoUrl: string;
-      location: string; qualityStandard: string; minOrderQuantity: number; description: string;
+      location: string; qualityStandard: string; minOrderQuantity: number; description: string; status: string;
     }> = {};
     if (body.cropName !== undefined) allowedUpdates.cropName = body.cropName;
     if (body.pricePerUnit !== undefined) allowedUpdates.pricePerUnit = body.pricePerUnit;
@@ -43,6 +46,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (body.qualityStandard !== undefined) allowedUpdates.qualityStandard = body.qualityStandard;
     if (body.minOrderQuantity !== undefined) allowedUpdates.minOrderQuantity = body.minOrderQuantity;
     if (body.description !== undefined) allowedUpdates.description = body.description;
+    if (body.status !== undefined) allowedUpdates.status = body.status;
 
     const batch = await updateBatch(id, user.id, allowedUpdates);
     return Response.json(batch);

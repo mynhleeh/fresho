@@ -22,12 +22,8 @@ export default function FarmerBatches() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount/refetch-on-signal; not the cascading-render pattern this rule targets
   useEffect(() => { load(); }, [createBatchPanel.refreshSignal]);
 
-  async function updateStage(batchId: string, stage: 'awaiting_harvest' | 'ready_for_handover') {
-    await fetch(`/api/batches/${batchId}/ready`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stage }),
-    });
+  async function toggleHidden(batchId: string) {
+    await fetch(`/api/batches/${batchId}/hidden`, { method: 'PATCH' });
     load();
   }
 
@@ -49,9 +45,8 @@ export default function FarmerBatches() {
             <BatchCard
               key={b.id}
               batch={b}
-              onStartHarvest={() => updateStage(b.id, 'awaiting_harvest')}
-              onMarkReady={() => updateStage(b.id, 'ready_for_handover')}
               onEdit={() => setEditingBatchId(b.id)}
+              onToggleHidden={() => toggleHidden(b.id)}
             />
           ))}
         </div>

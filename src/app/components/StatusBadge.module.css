@@ -11,17 +11,17 @@
 
 .neutral {
   background: var(--color-border);
-  color: var(--color-text-muted);
+  color: var(--color-neutral-text);
 }
 
 .warning {
   background: var(--color-warning-bg);
-  color: var(--color-warning);
+  color: var(--color-warning-text);
 }
 
 .info {
   background: var(--color-info-bg);
-  color: var(--color-info);
+  color: var(--color-info-text);
 }
 
 .success {
@@ -31,5 +31,5 @@
 
 .danger {
   background: var(--color-danger-bg);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }

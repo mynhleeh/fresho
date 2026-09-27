@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/db';
 import { ApiError } from '@/lib/errors';
 
+export const FARMER_SELECTABLE_BATCH_STATUSES = ['open', 'ready_for_handover', 'closed'];
+
 export async function createBatch(
   farmerId: string,
   input: {
@@ -47,6 +49,7 @@ export async function listOpenBatches(filter?: {
   return prisma.harvestBatch.findMany({
     where: {
       status: 'open',
+      isHidden: false,
       ...(filter?.cropName ? { cropName: { contains: filter.cropName } } : {}),
       ...(filter?.maxPricePerUnit !== undefined ? { pricePerUnit: { lte: filter.maxPricePerUnit } } : {}),
       ...(filter?.location ? { location: { contains: filter.location } } : {}),
@@ -91,6 +94,7 @@ export async function updateBatch(
     qualityStandard: string;
     minOrderQuantity: number;
     description: string;
+    status: string;
   }>,
 ) {
   const batch = await prisma.harvestBatch.findUnique({ where: { id: batchId } });
@@ -101,6 +105,14 @@ export async function updateBatch(
   }
 
   return prisma.harvestBatch.update({ where: { id: batchId }, data: input });
+}
+
+export async function toggleBatchHidden(batchId: string, farmerId: string) {
+  const batch = await prisma.harvestBatch.findUnique({ where: { id: batchId } });
+  if (!batch) throw new ApiError('batch_not_found', 'Batch not found', 404);
+  if (batch.farmerId !== farmerId) throw new ApiError('forbidden', 'Not your batch', 403);
+
+  return prisma.harvestBatch.update({ where: { id: batchId }, data: { isHidden: !batch.isHidden } });
 }
 
 export async function assertBatchOwnership(batchId: string, farmerId: string) {

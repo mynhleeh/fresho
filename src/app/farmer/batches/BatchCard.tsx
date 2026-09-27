@@ -1,6 +1,5 @@
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
-import { StatusBadge } from '../../components/StatusBadge';
 import { formatVnd } from '../../components/MoneySummaryRow';
 import { batchStatusInfo } from '@/lib/orderStatus';
 import { deriveBatchPlaceholder } from '@/lib/batchPlaceholder';
@@ -16,6 +15,7 @@ export type Batch = {
   pricePerUnit: number;
   status: string;
   photoUrl: string | null;
+  isHidden?: boolean;
 };
 
 const PLACEHOLDER_ICONS = {
@@ -26,15 +26,33 @@ const PLACEHOLDER_ICONS = {
   basket: BasketIcon,
 } as const;
 
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function BatchThumbnail({ batch }: { batch: Batch }) {
-  if (batch.photoUrl) {
-    // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
-    return <img src={batch.photoUrl} alt={batch.cropName} className={styles.photo} />;
-  }
-  const { icon, colorToken } = deriveBatchPlaceholder(batch.id);
+  const status = batchStatusInfo(batch.status);
+  const dimmedClass = batch.isHidden ? styles.dimmed : '';
+  const stripToneClass = styles[`strip${capitalize(status.tone)}`];
+
+  return (
+    <div className={styles.thumbnailFrame}>
+      {batch.photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
+        <img src={batch.photoUrl} alt={batch.cropName} className={`${styles.photo} ${dimmedClass}`} />
+      ) : (
+        <ThumbnailPlaceholder batch={batch} dimmedClass={dimmedClass} />
+      )}
+      <div className={`${styles.statusStrip} ${stripToneClass}`}>{status.label}</div>
+    </div>
+  );
+}
+
+function ThumbnailPlaceholder({ batch, dimmedClass }: { batch: Batch; dimmedClass: string }) {
+  const { icon, backgroundColor } = deriveBatchPlaceholder(batch.id);
   const Icon = PLACEHOLDER_ICONS[icon];
   return (
-    <div className={styles.placeholder} style={{ backgroundColor: `var(${colorToken})` }}>
+    <div className={`${styles.placeholder} ${dimmedClass}`} style={{ backgroundColor }}>
       <Icon className={styles.placeholderIcon} />
     </div>
   );
@@ -42,13 +60,11 @@ function BatchThumbnail({ batch }: { batch: Batch }) {
 
 export function BatchCard(props: {
   batch: Batch;
-  onStartHarvest?: () => void;
-  onMarkReady?: () => void;
   onEdit?: () => void;
+  onToggleHidden?: () => void;
 }) {
   const { batch } = props;
-  const status = batchStatusInfo(batch.status);
-  const hasActions = props.onStartHarvest || props.onMarkReady || props.onEdit;
+  const hasActions = props.onEdit || props.onToggleHidden;
 
   return (
     <Card className={styles.card}>
@@ -58,12 +74,14 @@ export function BatchCard(props: {
         <div className={styles.meta}>
           Còn lại {batch.quantityAvailable}/{batch.quantityTotal} {batch.unit} · {formatVnd(batch.pricePerUnit)}/{batch.unit}
         </div>
-        <StatusBadge label={status.label} tone={status.tone} />
         {hasActions && (
           <div className={styles.actions}>
-            {props.onStartHarvest && <Button variant="outline" onClick={props.onStartHarvest}>Bắt đầu thu hoạch</Button>}
-            {props.onMarkReady && <Button onClick={props.onMarkReady}>Sẵn sàng giao</Button>}
             {props.onEdit && <Button variant="outline" onClick={props.onEdit}>Chỉnh sửa</Button>}
+            {props.onToggleHidden && (
+              <Button variant="outline" onClick={props.onToggleHidden}>
+                {batch.isHidden ? 'Hiện' : 'Ẩn'}
+              </Button>
+            )}
           </div>
         )}
       </div>
