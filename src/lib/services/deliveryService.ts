@@ -32,6 +32,7 @@ export async function updateDeliveryStatus(
   actor: { id: string; role: string },
   status: 'in_transit' | 'delivered',
   trackingNote?: string,
+  handoverProof?: { actualQuantity?: number; proofPhotoUrl?: string },
 ) {
   const record = await prisma.deliveryRecord.findUnique({
     where: { preOrderId },
@@ -59,6 +60,14 @@ export async function updateDeliveryStatus(
 
   return prisma.deliveryRecord.update({
     where: { preOrderId },
-    data: { status, trackingNote, method: status === 'in_transit' ? 'carrier' : record.method },
+    data: {
+      status,
+      trackingNote,
+      method: status === 'in_transit' ? 'carrier' : record.method,
+      ...(status === 'delivered' ? {
+        actualQuantity: handoverProof?.actualQuantity,
+        proofPhotoUrl: handoverProof?.proofPhotoUrl,
+      } : {}),
+    },
   });
 }
