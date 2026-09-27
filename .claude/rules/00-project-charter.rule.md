@@ -41,6 +41,10 @@ Use these English identifiers consistently across code, database, and API. Do no
 stateDiagram-v2
     [*] --> open
     open --> pending_confirmation: pre_order placed
+    pending_confirmation --> negotiating: farmer requests changes
+    negotiating --> deposited: farmer confirms + deposit paid
+    negotiating --> rejected: farmer rejects
+    negotiating --> cancelled
     pending_confirmation --> deposited: farmer confirms + deposit paid
     pending_confirmation --> rejected: farmer rejects
     deposited --> awaiting_harvest
@@ -55,6 +59,8 @@ stateDiagram-v2
     settled --> [*]
     rejected --> [*]
 ```
+
+`negotiating` covers the "Trao đổi" branch from docs §2a (farmer needs to align on packaging/timing before deciding): reached only from `pending_confirmation`, and resolves the same way `pending_confirmation` does (confirm/reject/cancel) — it does not add any new terminal state or bypass the deposit-before-confirm rule.
 
 This is the single source of truth for order status values. Any module reading or writing order status MUST reference this exact set of states; do not introduce ad hoc statuses.
 
