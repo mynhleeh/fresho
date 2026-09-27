@@ -42,7 +42,7 @@ function navItemsForRole(role: Role): NavItem[] {
 }
 
 const PRIMARY_ACTION: Record<Role, { href: string; label: string } | null> = {
-  farmer: { href: '/farmer/batches', label: 'Đăng mùa vụ' },
+  farmer: { href: '/farmer/batches/new', label: 'Đăng mùa vụ' },
   buyer: { href: '/buyer/marketplace', label: 'Tìm nông sản' },
   admin: null,
   logistics: null,
