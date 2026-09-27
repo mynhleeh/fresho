@@ -108,6 +108,16 @@ function AccountIdentityCard({ account, onAvatarChanged }: { account: AccountPro
         {uploadError && <span role="alert" className={styles.statusError}>{uploadError}</span>}
         {!uploadError && <span className={styles.identityHint}>{uploading ? 'Đang tải ảnh lên…' : 'Ảnh JPG, PNG hoặc WEBP'}</span>}
       </div>
+      <dl className={styles.identityFacts}>
+        <div className={styles.identityFact}>
+          <dt>Vai trò</dt>
+          <dd>{ROLE_LABELS[account.role] ?? account.role}</dd>
+        </div>
+        <div className={styles.identityFact}>
+          <dt>Địa chỉ</dt>
+          <dd>{account.address || 'Chưa có'}</dd>
+        </div>
+      </dl>
     </section>
   );
 }
