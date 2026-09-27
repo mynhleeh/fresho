@@ -13,6 +13,9 @@ type Batch = { id: string; cropName: string; quantityTotal: number; quantityAvai
 export default function FarmerBatches() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [form, setForm] = useState({ cropName: '', quantityTotal: 0, unit: 'kg', pricePerUnit: 0, harvestDateEstimate: '' });
+  const [progressBatchId, setProgressBatchId] = useState<string | null>(null);
+  const [progressQuantity, setProgressQuantity] = useState(0);
+  const [progressDate, setProgressDate] = useState('');
 
   async function load() {
     const res = await fetch('/api/batches');
@@ -30,6 +33,28 @@ export default function FarmerBatches() {
       body: JSON.stringify(form),
     });
     setForm({ cropName: '', quantityTotal: 0, unit: 'kg', pricePerUnit: 0, harvestDateEstimate: '' });
+    load();
+  }
+
+  async function postProgress(batchId: string, kind: 'on_track' | 'quantity_adjusted' | 'rescheduled') {
+    const body =
+      kind === 'quantity_adjusted'
+        ? { kind, newQuantityTotal: progressQuantity }
+        : kind === 'rescheduled'
+          ? { kind, newHarvestDateEstimate: progressDate }
+          : { kind };
+
+    const res = await fetch(`/api/batches/${batchId}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      alert(error.message ?? error.code);
+      return;
+    }
+    setProgressBatchId(null);
     load();
   }
 
@@ -105,7 +130,37 @@ export default function FarmerBatches() {
                     >
                       Sẵn sàng giao
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setProgressBatchId(progressBatchId === b.id ? null : b.id)}
+                    >
+                      Cập nhật tiến độ
+                    </Button>
                   </div>
+                  {progressBatchId === b.id && (
+                    <div className={styles.progressPanel}>
+                      <Button variant="outline" onClick={() => postProgress(b.id, 'on_track')}>Đúng tiến độ</Button>
+                      <div className={styles.field}>
+                        <label htmlFor={`newQty-${b.id}`}>Điều chỉnh sản lượng</label>
+                        <input
+                          id={`newQty-${b.id}`}
+                          type="number"
+                          defaultValue={b.quantityTotal}
+                          onChange={(e) => setProgressQuantity(Number(e.target.value))}
+                        />
+                        <Button variant="outline" onClick={() => postProgress(b.id, 'quantity_adjusted')}>Lưu sản lượng</Button>
+                      </div>
+                      <div className={styles.field}>
+                        <label htmlFor={`newDate-${b.id}`}>Dời ngày thu hoạch</label>
+                        <input
+                          id={`newDate-${b.id}`}
+                          type="date"
+                          onChange={(e) => setProgressDate(e.target.value)}
+                        />
+                        <Button variant="outline" onClick={() => postProgress(b.id, 'rescheduled')}>Lưu ngày mới</Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

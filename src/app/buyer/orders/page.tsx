@@ -5,11 +5,12 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { StatusBadge } from '../../components/StatusBadge';
 import { OrderMessageThread } from '../../components/OrderMessageThread';
+import { HarvestProgressLog } from '../../components/HarvestProgressLog';
 import { formatVnd } from '../../components/MoneySummaryRow';
 import { preOrderStatusInfo } from '@/lib/orderStatus';
 import styles from './page.module.css';
 
-type PreOrder = { id: string; status: string; quantity: number; pricePerUnit: number; shippingFeeQuote: number | null; batch: { cropName: string } };
+type PreOrder = { id: string; status: string; quantity: number; pricePerUnit: number; shippingFeeQuote: number | null; batch: { id: string; cropName: string } };
 
 export default function BuyerOrders() {
   const [orders, setOrders] = useState<PreOrder[]>([]);
@@ -55,6 +56,9 @@ export default function BuyerOrders() {
                   </div>
                   <StatusBadge label={status.label} tone={status.tone} />
                 </div>
+                {(o.status === 'deposited' || o.status === 'awaiting_harvest') && (
+                  <HarvestProgressLog batchId={o.batch.id} />
+                )}
                 {userId && <OrderMessageThread preOrderId={o.id} currentUserId={userId} />}
                 {o.status === 'delivered' && (
                   <div className={styles.settleRow}>
