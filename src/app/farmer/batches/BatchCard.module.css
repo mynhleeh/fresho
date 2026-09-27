@@ -1,0 +1,56 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+.photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.placeholderIcon {
+  width: 48px;
+  height: 48px;
+  color: #fff;
+}
+.body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.name {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.meta {
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.9rem;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.progressPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

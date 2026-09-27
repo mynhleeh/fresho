@@ -16,123 +16,15 @@
   margin-top: var(--space-1);
 }
 
-.grid {
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cardGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4);
-}
-
-@media (max-width: 640px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
-}
-
-.field label {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--color-text-muted);
-}
-
-.field input {
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg);
-}
-
-.field input:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-}
-
-.aiHint {
-  background: var(--color-warning-bg);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-  margin-bottom: var(--space-4);
-  font-size: 14px;
-  color: var(--color-text);
-}
-
-.aiHintTitle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-weight: 700;
-  color: var(--color-warning);
-  margin-bottom: var(--space-1);
-}
-
-.aiHintIcon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-.formActions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.sectionTitle {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: var(--space-3);
-}
-
-.batchList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.batchRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.batchInfo {
-  flex: 1;
-  min-width: 200px;
-}
-
-.batchName {
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.batchMeta {
-  color: var(--color-text-muted);
-  font-size: 14px;
-  margin-top: 2px;
-}
-
-.batchActions {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.progressPanel {
-  flex-basis: 100%;
-  display: flex;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-  border-top: 1px solid var(--color-border);
-  padding-top: var(--space-3);
-  margin-top: var(--space-2);
-}
-
-.progressPanel .field {
-  margin-bottom: 0;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
 }
