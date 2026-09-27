@@ -4,6 +4,7 @@ import { Button } from '../../components/Button';
 import { formatVnd } from '../../components/MoneySummaryRow';
 import { SparkleIcon } from '../../components/icons';
 import { batchStatusInfo } from '@/lib/orderStatus';
+import { StatusBadge } from '../../components/StatusBadge';
 import { BatchCard, type Batch } from './BatchCard';
 import { BatchPhotoGallery, type GalleryPhoto } from './BatchPhotoGallery';
 import styles from './HarvestBatchForm.module.css';
@@ -344,23 +345,28 @@ export function HarvestBatchForm(props: {
               <label htmlFor="location">Địa điểm</label>
               <input id="location" placeholder="Châu Thành, Tiền Giang" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} required />
             </div>
-            {mode === 'edit' && (
+            {mode === 'edit' && initialBatch && (
               <div className={styles.field}>
                 <label htmlFor="status">Trạng thái mùa vụ</label>
-                <select
-                  id="status"
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                >
-                  {!FARMER_SELECTABLE_STATUSES.some((option) => option.value === initialBatch?.status) && initialBatch && (
-                    // TODO(business-confirm): awaiting_harvest is a system-set stage (deliveryService),
-                    // shown read-only here since farmers don't pick it manually from this dropdown.
-                    <option value={initialBatch.status} disabled>{batchStatusInfo(initialBatch.status).label}</option>
-                  )}
-                  {FARMER_SELECTABLE_STATUSES.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
+                <div className={styles.statusControl}>
+                  <StatusBadge id="status-current" {...batchStatusInfo(initialBatch.status)} />
+                  <select
+                    id="status"
+                    className={styles.statusSelect}
+                    value={form.status}
+                    aria-describedby="status-current"
+                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  >
+                    {!FARMER_SELECTABLE_STATUSES.some((option) => option.value === initialBatch.status) && (
+                      // TODO(business-confirm): awaiting_harvest is a system-set stage (deliveryService),
+                      // shown read-only here since farmers don't pick it manually from this dropdown.
+                      <option value={initialBatch.status} disabled>{batchStatusInfo(initialBatch.status).label}</option>
+                    )}
+                    {FARMER_SELECTABLE_STATUSES.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
             <div className={styles.field}>
