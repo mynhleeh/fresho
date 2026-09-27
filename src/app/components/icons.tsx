@@ -135,3 +135,49 @@ export function BookmarkIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function VegetableIcon({ className }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M12 3 11 8h2l-1-5Z" />
+      <path d="M8 6c-2 0-3 2-3 5 0 4 2 7 4 7s3-3 4-7c-1 0-2-2-2-5-2 0-2 2-3 5Z" />
+      <path d="M12 6c2 0 3 2 3 5 0 4-2 7-4 7s-3-3-4-7c1 0 2-2 2-5 2 0 2 2 3 5Z" />
+      <path d="M7 18h10" />
+    </svg>
+  );
+}
+
+export function FruitIcon({ className }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <circle cx="12" cy="10" r="6" />
+      <path d="M12 4c0-1 1-2 2-2" />
+      <path d="M8.5 5 7 3.5" />
+      <path d="M15.5 5 17 3.5" />
+      <path d="M6 18h12" />
+    </svg>
+  );
+}
+
+export function GrainIcon({ className }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M8 3c0 1.5-1 2.5-1 4s1 2.5 1 4-1 2.5-1 4 1 2.5 1 4" />
+      <path d="M12 3c0 1.5-1 2.5-1 4s1 2.5 1 4-1 2.5-1 4 1 2.5 1 4" />
+      <path d="M16 3c0 1.5-1 2.5-1 4s1 2.5 1 4-1 2.5-1 4 1 2.5 1 4" />
+      <path d="M5 20h14" />
+    </svg>
+  );
+}
+
+export function BasketIcon({ className }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M6 10h12l-1 8.5a2 2 0 0 1-2 1.5H9a2 2 0 0 1-2-1.5L6 10Z" />
+      <path d="M6 10h12" />
+      <path d="M9 6c0-1 1-2 3-2s3 1 3 2" />
+      <path d="M9 10v8" />
+      <path d="M15 10v8" />
+    </svg>
+  );
+}
