@@ -4,6 +4,7 @@ import { Button } from '../../components/Button';
 import { formatVnd } from '../../components/MoneySummaryRow';
 import { SparkleIcon } from '../../components/icons';
 import { BatchCard, type Batch } from './BatchCard';
+import { PhotoUploadField } from './PhotoUploadField';
 import styles from './HarvestBatchForm.module.css';
 
 export type EditableBatch = Batch & {
@@ -186,30 +187,36 @@ export function HarvestBatchForm(props: {
   };
 
   return (
-    <div>
-      <div className={styles.tabBar}>
-        <button
-          type="button"
-          className={tab === 'info' ? styles.tabActive : styles.tab}
-          onClick={() => setTab('info')}
-        >
-          Thông tin
-        </button>
-        <button
-          type="button"
-          className={tab === 'preview' ? styles.tabActive : styles.tab}
-          onClick={() => setTab('preview')}
-        >
-          Xem trước
-        </button>
+    <div className={styles.formRoot}>
+      <div className={styles.stickyHeader}>
+        <div className={styles.tabBar}>
+          <button
+            type="button"
+            className={tab === 'info' ? styles.tabActive : styles.tab}
+            onClick={() => setTab('info')}
+          >
+            Thông tin
+          </button>
+          <button
+            type="button"
+            className={tab === 'preview' ? styles.tabActive : styles.tab}
+            onClick={() => setTab('preview')}
+          >
+            Xem trước
+          </button>
+        </div>
         <div className={styles.liveSummary}>
           {form.cropName || 'Chưa đặt tên'} · {formatVnd(form.pricePerUnit)}/{form.unit} · {form.quantityTotal} {form.unit}
         </div>
       </div>
 
-      {tab === 'info' ? (
-        <form onSubmit={submit}>
-          <div className={styles.grid}>
+      <form
+        id="harvest-batch-form"
+        onSubmit={submit}
+        className={styles.scrollBody}
+        style={{ display: tab === 'info' ? undefined : 'none' }}
+      >
+        <div className={styles.grid}>
             <div className={styles.field}>
               <label htmlFor="cropName">Tên nông sản</label>
               <input id="cropName" placeholder="Dưa leo loại 1" value={form.cropName} onChange={(e) => setForm({ ...form, cropName: e.target.value })} required />
@@ -226,6 +233,7 @@ export function HarvestBatchForm(props: {
                 value={form.unit}
                 onChange={(e) => setForm({ ...form, unit: e.target.value })}
                 disabled={mode === 'edit'}
+                title={mode === 'edit' ? 'Không thể đổi đơn vị sau khi đăng' : undefined}
                 required
               />
               {mode === 'edit' && <span className={styles.fieldHint}>Không thể đổi đơn vị sau khi đăng</span>}
@@ -255,7 +263,11 @@ export function HarvestBatchForm(props: {
             </div>
             <div className={styles.field}>
               <label htmlFor="photo">Ảnh mùa vụ (không bắt buộc)</label>
-              <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
+              <PhotoUploadField
+                id="photo"
+                existingPhotoUrl={initialBatch?.photoUrl ?? null}
+                onSelect={setPhoto}
+              />
             </div>
             <div className={styles.fieldWide}>
               <label htmlFor="description">Mô tả chi tiết</label>
@@ -283,18 +295,19 @@ export function HarvestBatchForm(props: {
               </div>
             </div>
           )}
+      </form>
 
-          <div className={styles.formActions}>
-            {props.onCancel && <Button type="button" variant="outline" onClick={props.onCancel}>Hủy</Button>}
-            <Button type="submit">{mode === 'create' ? 'Xem trước và đăng' : 'Lưu thay đổi'}</Button>
-          </div>
-        </form>
-      ) : (
+      <div className={styles.scrollBody} style={{ display: tab === 'preview' ? undefined : 'none' }}>
         <div className={styles.previewTab}>
           <BatchCard batch={previewBatch} />
           {form.description && <p className={styles.previewDescription}>{form.description}</p>}
         </div>
-      )}
+      </div>
+
+      <div className={styles.stickyFooter}>
+        {props.onCancel && <Button type="button" variant="outline" onClick={props.onCancel}>Hủy</Button>}
+        <Button type="submit" form="harvest-batch-form">{mode === 'create' ? 'Xem trước và đăng' : 'Lưu thay đổi'}</Button>
+      </div>
     </div>
   );
 }

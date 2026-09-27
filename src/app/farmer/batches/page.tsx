@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AppShell } from '../../components/AppShell';
 import { Button } from '../../components/Button';
 import { Overlay } from '../../components/Overlay';
@@ -9,8 +9,16 @@ import { HarvestBatchForm, type EditableBatch } from './HarvestBatchForm';
 import styles from './page.module.css';
 
 export default function FarmerBatches() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [batches, setBatches] = useState<EditableBatch[]>([]);
   const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(() => searchParams.get('new') === '1');
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') router.replace('/farmer/batches');
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on mount to strip the ?new=1 launch param from the URL
+  }, []);
 
   async function load() {
     const res = await fetch('/api/batches?mine=1');
@@ -39,9 +47,7 @@ export default function FarmerBatches() {
             <h1 className={styles.heading}>Mùa vụ của tôi</h1>
             <p className={styles.subheading}>Đăng đợt thu hoạch sắp tới để người mua chủ động đặt trước.</p>
           </div>
-          <Link href="/farmer/batches/new">
-            <Button>+ Đăng mùa vụ</Button>
-          </Link>
+          <Button onClick={() => setIsCreating(true)}>+ Đăng mùa vụ</Button>
         </div>
 
         <div className={styles.cardGrid}>
@@ -57,7 +63,13 @@ export default function FarmerBatches() {
         </div>
       </div>
 
-      <Overlay open={editingBatch !== null} onClose={() => setEditingBatchId(null)}>
+      <Overlay
+        open={editingBatch !== null || isCreating}
+        onClose={() => {
+          setEditingBatchId(null);
+          setIsCreating(false);
+        }}
+      >
         {editingBatch && (
           <HarvestBatchForm
             mode="edit"
@@ -65,6 +77,16 @@ export default function FarmerBatches() {
             onCancel={() => setEditingBatchId(null)}
             onSaved={() => {
               setEditingBatchId(null);
+              load();
+            }}
+          />
+        )}
+        {isCreating && (
+          <HarvestBatchForm
+            mode="create"
+            onCancel={() => setIsCreating(false)}
+            onSaved={() => {
+              setIsCreating(false);
               load();
             }}
           />
