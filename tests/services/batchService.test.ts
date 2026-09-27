@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { prisma } from '@/lib/db';
-import { listOpenBatches, listBatchesByFarmer, createBatch, setBatchPhoto } from '@/lib/services/batchService';
+import { listOpenBatches, listBatchesByFarmer, createBatch, setBatchPhoto, updateBatch } from '@/lib/services/batchService';
 import { ApiError } from '@/lib/errors';
 import { cleanupDb } from '../helpers/cleanup';
 
@@ -148,6 +148,34 @@ describe('listBatchesByFarmer', () => {
     expect(result).toHaveLength(2);
     expect(result.map((b) => b.id).sort()).toEqual([openBatch.id, awaitingBatch.id].sort());
     expect(result.every((b) => b.farmerId === farmer.id)).toBe(true);
+  });
+});
+
+describe('updateBatch', () => {
+  beforeEach(async () => {
+    await cleanupDb();
+  });
+
+  it('persists location, qualityStandard, minOrderQuantity, and description on update', async () => {
+    const farmer = await prisma.user.create({
+      data: { name: 'F', phone: '11', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    const batch = await createBatch(farmer.id, {
+      cropName: 'Xoài cát', quantityTotal: 100, unit: 'kg', pricePerUnit: 20000,
+      harvestDateEstimate: new Date(), location: 'Tien Giang',
+    });
+
+    const updated = await updateBatch(batch.id, farmer.id, {
+      location: 'Ben Tre',
+      qualityStandard: 'VietGAP',
+      minOrderQuantity: 25,
+      description: 'Đóng gói theo thùng xốp 10kg.',
+    });
+
+    expect(updated.location).toBe('Ben Tre');
+    expect(updated.qualityStandard).toBe('VietGAP');
+    expect(updated.minOrderQuantity).toBe(25);
+    expect(updated.description).toBe('Đóng gói theo thùng xốp 10kg.');
   });
 });
 

@@ -79,7 +79,15 @@ export async function listBatchesByFarmer(farmerId: string) {
 export async function updateBatch(
   batchId: string,
   farmerId: string,
-  input: Partial<{ cropName: string; pricePerUnit: number; photoUrl: string }>,
+  input: Partial<{
+    cropName: string;
+    pricePerUnit: number;
+    photoUrl: string;
+    location: string;
+    qualityStandard: string;
+    minOrderQuantity: number;
+    description: string;
+  }>,
 ) {
   const batch = await prisma.harvestBatch.findUnique({ where: { id: batchId } });
   if (!batch) throw new ApiError('batch_not_found', 'Batch not found', 404);
