@@ -2,6 +2,7 @@ export type StatusTone = 'neutral' | 'warning' | 'info' | 'success' | 'danger';
 
 const PRE_ORDER_STATUS: Record<string, { label: string; tone: StatusTone }> = {
   pending_confirmation: { label: 'Chờ nông dân xác nhận', tone: 'warning' },
+  negotiating: { label: 'Đang trao đổi', tone: 'warning' },
   deposited: { label: 'Đã đặt cọc', tone: 'info' },
   awaiting_harvest: { label: 'Chờ thu hoạch', tone: 'info' },
   ready_for_handover: { label: 'Sẵn sàng bàn giao', tone: 'info' },

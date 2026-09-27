@@ -27,7 +27,7 @@ export default function FarmerOrders() {
     fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)).then((u) => setUserId(u?.id ?? null));
   }, []);
 
-  async function act(id: string, action: 'confirm' | 'reject') {
+  async function act(id: string, action: 'confirm' | 'reject' | 'negotiate') {
     await fetch(`/api/preorders/${id}/${action}`, { method: 'PATCH' });
     load();
   }
@@ -66,9 +66,12 @@ export default function FarmerOrders() {
                 </div>
                 {userId && <OrderMessageThread preOrderId={o.id} currentUserId={userId} />}
                 <div className={styles.orderActions}>
-                  {o.status === 'pending_confirmation' && (
+                  {(o.status === 'pending_confirmation' || o.status === 'negotiating') && (
                     <>
                       <Button onClick={() => act(o.id, 'confirm')}>Xác nhận đơn hàng</Button>
+                      {o.status === 'pending_confirmation' && (
+                        <Button variant="outline" onClick={() => act(o.id, 'negotiate')}>Trao đổi</Button>
+                      )}
                       <Button variant="danger" onClick={() => act(o.id, 'reject')}>Từ chối</Button>
                     </>
                   )}

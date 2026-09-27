@@ -2,11 +2,12 @@ import { prisma } from '@/lib/db';
 import { ApiError } from '@/lib/errors';
 
 export type PreOrderEvent =
-  | 'confirm' | 'reject' | 'mark_awaiting_harvest' | 'mark_ready_for_handover'
+  | 'negotiate' | 'confirm' | 'reject' | 'mark_awaiting_harvest' | 'mark_ready_for_handover'
   | 'mark_in_transit' | 'mark_delivered' | 'confirm_receipt' | 'cancel';
 
 const TRANSITIONS: Record<string, PreOrderEvent[]> = {
-  pending_confirmation: ['confirm', 'reject', 'cancel'],
+  pending_confirmation: ['negotiate', 'confirm', 'reject', 'cancel'],
+  negotiating: ['confirm', 'reject', 'cancel'],
   deposited: ['mark_awaiting_harvest', 'cancel'],
   awaiting_harvest: ['mark_ready_for_handover'],
   ready_for_handover: ['mark_in_transit', 'mark_delivered'],
@@ -15,6 +16,7 @@ const TRANSITIONS: Record<string, PreOrderEvent[]> = {
 };
 
 const NEXT_STATUS: Record<PreOrderEvent, string> = {
+  negotiate: 'negotiating',
   confirm: 'deposited',
   reject: 'rejected',
   cancel: 'cancelled',
@@ -33,6 +35,9 @@ export async function createPreOrder(
   if (!batch) throw new ApiError('batch_not_found', 'Batch not found', 404);
   if (batch.status !== 'open') throw new ApiError('batch_closed', 'Batch is not open', 400);
   if (input.quantity > batch.quantityAvailable) throw new ApiError('insufficient_quantity', 'Not enough quantity available', 400);
+  if (input.quantity < batch.minOrderQuantity) {
+    throw new ApiError('below_min_order_quantity', `Quantity must be at least ${batch.minOrderQuantity}`, 400);
+  }
 
   return prisma.$transaction(async (tx) => {
     const preOrder = await tx.preOrder.create({
