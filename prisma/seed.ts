@@ -47,6 +47,7 @@ async function main() {
         location: batch.location,
         qualityStandard: batch.qualityStandard,
         minOrderQuantity: batch.minOrderQuantity ?? 1,
+        description: batch.description,
       },
     });
 
