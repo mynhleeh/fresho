@@ -63,8 +63,9 @@ export async function transitionPreOrderStatus(
   preOrderId: string,
   event: PreOrderEvent,
   _actor: { id: string; role: string },
+  tx: Pick<typeof prisma, 'preOrder' | 'harvestBatch'> = prisma,
 ) {
-  const preOrder = await prisma.preOrder.findUnique({ where: { id: preOrderId }, include: { deposits: true } });
+  const preOrder = await tx.preOrder.findUnique({ where: { id: preOrderId }, include: { deposits: true } });
   if (!preOrder) throw new ApiError('pre_order_not_found', 'Pre-order not found', 404);
 
   const allowed = TRANSITIONS[preOrder.status] ?? [];
@@ -77,20 +78,26 @@ export async function transitionPreOrderStatus(
   }
 
   if (event === 'reject' || event === 'cancel') {
-    const [, updated] = await prisma.$transaction([
-      prisma.harvestBatch.update({
-        where: { id: preOrder.batchId },
-        data: { quantityAvailable: { increment: preOrder.quantity } },
-      }),
-      prisma.preOrder.update({
-        where: { id: preOrderId },
-        data: { status: NEXT_STATUS[event] as never },
-      }),
-    ]);
-    return updated;
+    if (tx === prisma) {
+      const [, updated] = await prisma.$transaction([
+        prisma.harvestBatch.update({
+          where: { id: preOrder.batchId },
+          data: { quantityAvailable: { increment: preOrder.quantity } },
+        }),
+        prisma.preOrder.update({
+          where: { id: preOrderId },
+          data: { status: NEXT_STATUS[event] as never },
+        }),
+      ]);
+      return updated;
+    }
+    await tx.harvestBatch.update({
+      where: { id: preOrder.batchId },
+      data: { quantityAvailable: { increment: preOrder.quantity } },
+    });
   }
 
-  return prisma.preOrder.update({
+  return tx.preOrder.update({
     where: { id: preOrderId },
     data: { status: NEXT_STATUS[event] as never },
   });

@@ -2,29 +2,36 @@ import { prisma } from '@/lib/db';
 import { ApiError } from '@/lib/errors';
 import { transitionPreOrderStatus } from '@/lib/services/preOrderService';
 
+// TODO(business-confirm): harvestBatch.status set unconditionally per docx Bước 5, independent of each pre_order's status.
 export async function markBatchAwaitingHarvest(batchId: string, farmerId: string) {
   const batch = await prisma.harvestBatch.findUnique({ where: { id: batchId } });
   if (!batch || batch.farmerId !== farmerId) throw new ApiError('forbidden', 'Not your batch', 403);
 
-  const preOrders = await prisma.preOrder.findMany({ where: { batchId, status: 'deposited' } });
-  for (const po of preOrders) {
-    await transitionPreOrderStatus(po.id, 'mark_awaiting_harvest', { id: farmerId, role: 'farmer' });
-  }
+  await prisma.$transaction(async (tx) => {
+    const preOrders = await tx.preOrder.findMany({ where: { batchId, status: 'deposited' } });
+    for (const po of preOrders) {
+      await transitionPreOrderStatus(po.id, 'mark_awaiting_harvest', { id: farmerId, role: 'farmer' }, tx);
+    }
+    await tx.harvestBatch.update({ where: { id: batchId }, data: { status: 'awaiting_harvest' } });
+  });
 }
 
 export async function markBatchReadyForHandover(batchId: string, farmerId: string) {
   const batch = await prisma.harvestBatch.findUnique({ where: { id: batchId } });
   if (!batch || batch.farmerId !== farmerId) throw new ApiError('forbidden', 'Not your batch', 403);
 
-  const preOrders = await prisma.preOrder.findMany({ where: { batchId, status: 'awaiting_harvest' } });
-  for (const po of preOrders) {
-    await transitionPreOrderStatus(po.id, 'mark_ready_for_handover', { id: farmerId, role: 'farmer' });
-    await prisma.deliveryRecord.upsert({
-      where: { preOrderId: po.id },
-      create: { preOrderId: po.id, method: 'self_pickup', status: 'ready_for_handover' },
-      update: {},
-    });
-  }
+  await prisma.$transaction(async (tx) => {
+    const preOrders = await tx.preOrder.findMany({ where: { batchId, status: 'awaiting_harvest' } });
+    for (const po of preOrders) {
+      await transitionPreOrderStatus(po.id, 'mark_ready_for_handover', { id: farmerId, role: 'farmer' }, tx);
+      await tx.deliveryRecord.upsert({
+        where: { preOrderId: po.id },
+        create: { preOrderId: po.id, method: 'self_pickup', status: 'ready_for_handover' },
+        update: {},
+      });
+    }
+    await tx.harvestBatch.update({ where: { id: batchId }, data: { status: 'ready_for_handover' } });
+  });
 }
 
 export async function updateDeliveryStatus(
