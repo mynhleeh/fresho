@@ -1,99 +1,451 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  max-width: 520px;
+  gap: var(--space-5);
+  width: 100%;
 }
 
-.heading {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--color-primary-dark);
-  letter-spacing: -0.3px;
-}
-
-.section {
+.pageHeader {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-soft);
+  gap: var(--space-1);
 }
 
-.sectionTitle {
+.eyebrow {
+  font-size: 12px;
   font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
-.avatarRow {
+.heading {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--color-primary-dark);
+}
+
+.subheading {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-neutral-text);
+}
+
+.card,
+.identityCard,
+.loadingCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.loadingCard {
+  padding: var(--space-6);
+  color: var(--color-text-muted);
+  font-size: 15px;
+}
+
+.identityCard {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-5);
+  padding: var(--space-5) 28px;
+}
+
+.avatarFrame {
+  position: relative;
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+}
+
+.avatar,
+.avatarInitials {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--color-surface), 0 0 0 5px var(--color-accent-gold);
 }
 
 .avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
   object-fit: cover;
   background: var(--color-primary-light);
-  border: 2px solid var(--color-accent-gold);
 }
 
-.avatarPlaceholder {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  border: 2px solid var(--color-accent-gold);
+.avatarInitials {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 34px;
+  font-weight: 800;
 }
 
-.form {
+.avatarButton {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 3px solid var(--color-surface);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  cursor: pointer;
+  transition: filter var(--transition-fast);
 }
 
-.form label {
+.avatarButton:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.avatarButton:focus-visible {
+  outline: 3px solid var(--color-accent-gold);
+  outline-offset: 2px;
+}
+
+.avatarButton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.avatarButtonIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.identityText {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  min-width: 0;
+}
+
+.identityNameRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.identityName {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.roleBadge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.identityMeta {
+  font-size: 15px;
+  color: var(--color-neutral-text);
+}
+
+.identityHint {
   font-size: 13px;
-  font-weight: 600;
   color: var(--color-text-muted);
 }
 
-.form input {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.identityFacts {
+  display: flex;
+  gap: var(--space-6);
+  margin-left: auto;
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--color-border);
+}
+
+.identityFact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 120px;
+}
+
+.identityFact dt {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.identityFact dd {
   font-size: 15px;
-  background: var(--color-bg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.sectionGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-5) 28px var(--space-1);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.cardDescription {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.fieldGrid,
+.fieldStack {
+  padding: 20px 28px 28px;
+  gap: 20px var(--space-5);
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  row-gap: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.fieldLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.input {
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 15px;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.form input:focus-visible {
+.input:hover:not(:read-only) {
+  border-color: #c9c6b6;
+}
+
+.input:focus-visible {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  box-shadow: 0 0 0 4px var(--color-primary-light);
 }
 
-.error {
-  color: var(--color-danger);
+.input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.inputReadonly {
+  border-style: dashed;
+  background: var(--color-bg);
+  color: var(--color-neutral-text);
+  cursor: default;
+}
+
+.inputReadonly:focus-visible {
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.fieldHint,
+.fieldHintMet,
+.fieldError {
   font-size: 13px;
+  font-weight: 600;
 }
 
-.success {
+.fieldHint {
+  color: var(--color-text-muted);
+}
+
+.fieldHintMet {
   color: var(--color-primary);
-  font-size: 13px;
+}
+
+.fieldError {
+  color: var(--color-danger-text);
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding: var(--space-4) 28px;
+  border-top: 1px solid var(--color-border);
+  background: #fbfaf5;
+}
+
+.footerActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.footerActions .secondaryButton {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.statusPending,
+.statusSuccess,
+.statusError {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.statusPending {
+  color: var(--color-neutral-text);
+}
+
+.statusPending::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-gold);
+}
+
+.statusSuccess {
+  color: var(--color-primary);
+}
+
+.statusError {
+  color: var(--color-danger-text);
+}
+
+.sessionCard {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-5) 28px;
+}
+
+.sessionText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sessionButton {
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+@media (max-width: 900px) {
+  .identityFacts {
+    display: none;
+  }
+
+  .sectionGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .heading {
+    font-size: 24px;
+  }
+
+  .identityCard {
+    flex-direction: column;
+    text-align: center;
+    padding: var(--space-5);
+  }
+
+  .identityText {
+    align-items: center;
+  }
+
+  .identityNameRow {
+    justify-content: center;
+  }
+
+  .cardHeader {
+    padding: 20px 20px var(--space-1);
+  }
+
+  .fieldGrid,
+  .fieldStack {
+    padding: var(--space-4) 20px 20px;
+  }
+
+  .fieldGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .input {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .cardFooter {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-4) 20px;
+  }
+
+  .footerActions {
+    flex-direction: column-reverse;
+  }
+
+  .sessionCard {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+  }
 }
