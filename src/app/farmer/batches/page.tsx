@@ -5,6 +5,7 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { StatusBadge } from '../../components/StatusBadge';
 import { formatVnd } from '../../components/MoneySummaryRow';
+import { SparkleIcon } from '../../components/icons';
 import { batchStatusInfo } from '@/lib/orderStatus';
 import styles from './page.module.css';
 
@@ -12,10 +13,24 @@ type Batch = { id: string; cropName: string; quantityTotal: number; quantityAvai
 
 export default function FarmerBatches() {
   const [batches, setBatches] = useState<Batch[]>([]);
-  const [form, setForm] = useState({ cropName: '', quantityTotal: 0, unit: 'kg', pricePerUnit: 0, harvestDateEstimate: '' });
+  const [form, setForm] = useState({
+    cropName: '',
+    quantityTotal: 0,
+    unit: 'kg',
+    pricePerUnit: 0,
+    harvestDateEstimate: '',
+    location: '',
+    qualityStandard: '',
+    minOrderQuantity: 1,
+  });
   const [progressBatchId, setProgressBatchId] = useState<string | null>(null);
   const [progressQuantity, setProgressQuantity] = useState(0);
   const [progressDate, setProgressDate] = useState('');
+  const [advisory, setAdvisory] = useState<{
+    suggestedMinPrice: number | null;
+    suggestedMaxPrice: number | null;
+    packagingSuggestion: string;
+  } | null>(null);
 
   async function load() {
     const res = await fetch('/api/batches');
@@ -25,6 +40,19 @@ export default function FarmerBatches() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    const cropName = form.cropName.trim();
+    const timeout = setTimeout(async () => {
+      if (cropName.length === 0) {
+        setAdvisory(null);
+        return;
+      }
+      const res = await fetch(`/api/batches/advisory?cropName=${encodeURIComponent(cropName)}`);
+      if (res.ok) setAdvisory(await res.json());
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [form.cropName]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     await fetch('/api/batches', {
@@ -32,7 +60,16 @@ export default function FarmerBatches() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     });
-    setForm({ cropName: '', quantityTotal: 0, unit: 'kg', pricePerUnit: 0, harvestDateEstimate: '' });
+    setForm({
+      cropName: '',
+      quantityTotal: 0,
+      unit: 'kg',
+      pricePerUnit: 0,
+      harvestDateEstimate: '',
+      location: '',
+      qualityStandard: '',
+      minOrderQuantity: 1,
+    });
     load();
   }
 
@@ -90,13 +127,34 @@ export default function FarmerBatches() {
                 <label htmlFor="harvestDateEstimate">Ngày thu hoạch dự kiến</label>
                 <input id="harvestDateEstimate" type="date" value={form.harvestDateEstimate} onChange={(e) => setForm({ ...form, harvestDateEstimate: e.target.value })} required />
               </div>
+              <div className={styles.field}>
+                <label htmlFor="location">Địa điểm</label>
+                <input id="location" placeholder="Châu Thành, Tiền Giang" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} required />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="qualityStandard">Tiêu chuẩn sản phẩm</label>
+                <input id="qualityStandard" placeholder="VietGAP, loại 1" value={form.qualityStandard} onChange={(e) => setForm({ ...form, qualityStandard: e.target.value })} />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="minOrderQuantity">Số lượng tối thiểu đặt trước</label>
+                <input id="minOrderQuantity" type="number" min={1} value={form.minOrderQuantity} onChange={(e) => setForm({ ...form, minOrderQuantity: Number(e.target.value) })} />
+              </div>
             </div>
 
-            {/* TODO(business-confirm): gợi ý giá/đóng gói từ AI chưa có mô hình thật, hiển thị tĩnh theo mockup để minh hoạ UX */}
-            <div className={styles.aiHint}>
-              <div className={styles.aiHintTitle}>✨ Gợi ý từ AI (chỉ mang tính tham khảo)</div>
-              <div>Giá tham khảo cho nông sản cùng loại trong khu vực thường dao động quanh mức đã đăng gần đây. Nông dân vẫn là người quyết định giá bán cuối cùng.</div>
-            </div>
+            {advisory && (
+              <div className={styles.aiHint}>
+                <div className={styles.aiHintTitle}>
+                  <SparkleIcon className={styles.aiHintIcon} />
+                  Gợi ý từ AI (chỉ mang tính tham khảo)
+                </div>
+                <div>
+                  {advisory.suggestedMinPrice !== null
+                    ? `Giá tham khảo cho nông sản cùng loại: ${formatVnd(advisory.suggestedMinPrice)} – ${formatVnd(advisory.suggestedMaxPrice ?? advisory.suggestedMinPrice)}/đơn vị.`
+                    : 'Chưa có dữ liệu giá lịch sử cho loại nông sản này.'}{' '}
+                  Đóng gói gợi ý: {advisory.packagingSuggestion}. Nông dân vẫn là người quyết định giá bán và cách đóng gói cuối cùng.
+                </div>
+              </div>
+            )}
 
             <div className={styles.formActions}>
               <Button type="submit">Xem trước và đăng</Button>

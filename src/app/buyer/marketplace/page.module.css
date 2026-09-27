@@ -49,6 +49,11 @@
   font-size: 18px;
 }
 
+.bookmarkIcon {
+  width: 16px;
+  height: 16px;
+}
+
 .orderPanel {
   display: flex;
   flex-direction: column;

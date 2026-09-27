@@ -23,6 +23,7 @@ model User {
   raisedDisputes     DisputeLog[]
   ratingsGiven       Rating[]         @relation("Rater")
   ratingsReceived    Rating[]         @relation("Ratee")
+  savedBatches       SavedBatch[]
 
   @@map("users")
 }
@@ -56,12 +57,28 @@ model HarvestBatch {
   harvestDateEstimate  DateTime    @map("harvest_date_estimate")
   status               String      @default("open")
   photoUrl             String?     @map("photo_url")
+  location             String      @default("")
+  qualityStandard      String?     @map("quality_standard")
+  minOrderQuantity     Int         @default(1) @map("min_order_quantity")
   createdAt            DateTime    @default(now()) @map("created_at")
 
   preOrders        PreOrder[]
   progressUpdates  HarvestProgressUpdate[]
+  savedBy          SavedBatch[]
 
   @@map("harvest_batches")
+}
+
+model SavedBatch {
+  id        String       @id @default(cuid())
+  batchId   String       @map("batch_id")
+  batch     HarvestBatch @relation(fields: [batchId], references: [id])
+  buyerId   String       @map("buyer_id")
+  buyer     User         @relation(fields: [buyerId], references: [id])
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@unique([batchId, buyerId])
+  @@map("saved_batches")
 }
 
 model HarvestProgressUpdate {

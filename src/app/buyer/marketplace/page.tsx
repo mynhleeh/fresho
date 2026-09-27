@@ -4,9 +4,20 @@ import { AppShell } from '../../components/AppShell';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { MoneySummaryRow, formatVnd } from '../../components/MoneySummaryRow';
+import { BookmarkIcon } from '../../components/icons';
 import styles from './page.module.css';
 
-type Batch = { id: string; cropName: string; quantityAvailable: number; unit: string; pricePerUnit: number };
+type Batch = {
+  id: string;
+  cropName: string;
+  quantityAvailable: number;
+  unit: string;
+  pricePerUnit: number;
+  location: string;
+  qualityStandard: string | null;
+  minOrderQuantity: number;
+  harvestDateEstimate: string;
+};
 type VehicleType = 'motorbike' | 'small_truck' | 'refrigerated_truck';
 type ShippingQuote = { estimatedFee: number; pickupWindow: string; storageRequirement: string; vehicleType: string };
 
@@ -24,14 +35,35 @@ export default function Marketplace() {
   const [vehicleType, setVehicleType] = useState<VehicleType>('motorbike');
   const [distanceKm, setDistanceKm] = useState(10);
   const [quote, setQuote] = useState<ShippingQuote | null>(null);
+  const [locationFilter, setLocationFilter] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'harvestDate' | 'trustScore'>('newest');
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   async function load() {
-    const res = await fetch('/api/batches');
+    const params = new URLSearchParams();
+    if (locationFilter) params.set('location', locationFilter);
+    if (sortBy !== 'newest') params.set('sortBy', sortBy);
+    const res = await fetch(`/api/batches?${params.toString()}`);
     setBatches(await res.json());
   }
 
+  async function loadSaved() {
+    const res = await fetch('/api/batches/saved');
+    if (!res.ok) return;
+    const saved: Batch[] = await res.json();
+    setSavedIds(new Set(saved.map((b) => b.id)));
+  }
+
   // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); loadSaved(); }, [locationFilter, sortBy]);
+
+  async function toggleSave(batchId: string) {
+    const isSaved = savedIds.has(batchId);
+    await fetch(`/api/batches/${batchId}/save`, { method: isSaved ? 'DELETE' : 'POST' });
+    const next = new Set(savedIds);
+    if (isSaved) next.delete(batchId); else next.add(batchId);
+    setSavedIds(next);
+  }
 
   async function requestQuote(batchId: string, quantity: number) {
     const res = await fetch('/api/shipping-quotes', {
@@ -94,14 +126,36 @@ export default function Marketplace() {
           <p className={styles.subheading}>Khám phá các lô hàng sắp thu hoạch.</p>
         </div>
 
+        <div className={styles.quantityRow}>
+          <label htmlFor="locationFilter">Khu vực</label>
+          <input
+            id="locationFilter"
+            placeholder="Tiền Giang"
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+          />
+          <label htmlFor="sortBy">Sắp xếp</label>
+          <select id="sortBy" value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
+            <option value="newest">Mới nhất</option>
+            <option value="harvestDate">Ngày thu hoạch gần nhất</option>
+            <option value="trustScore">Uy tín người bán</option>
+          </select>
+        </div>
+
         <div className={styles.grid}>
           {batches.map((b) => (
             <Card key={b.id} className={`${styles.batchCard} ${selectedId === b.id ? styles.selected : ''}`}>
               <span className={styles.batchName}>{b.cropName}</span>
-              <span className={styles.batchMeta}>Còn lại {b.quantityAvailable} {b.unit}</span>
+              <span className={styles.batchMeta}>Còn lại {b.quantityAvailable} {b.unit} · Tối thiểu {b.minOrderQuantity} {b.unit}</span>
+              <span className={styles.batchMeta}>{b.location}</span>
+              {b.qualityStandard && <span className={styles.batchMeta}>{b.qualityStandard}</span>}
               <span className={styles.price}>{formatVnd(b.pricePerUnit)}/{b.unit}</span>
               <Button variant={selectedId === b.id ? 'primary' : 'outline'} onClick={() => setSelectedId(b.id)}>
                 Xem lô hàng
+              </Button>
+              <Button variant="outline" onClick={() => toggleSave(b.id)}>
+                <BookmarkIcon className={styles.bookmarkIcon} />
+                {savedIds.has(b.id) ? 'Đã lưu' : 'Lưu lô'}
               </Button>
             </Card>
           ))}
@@ -115,9 +169,9 @@ export default function Marketplace() {
               <input
                 id="quantity"
                 type="number"
-                min={1}
+                min={selectedBatch.minOrderQuantity}
                 max={selectedBatch.quantityAvailable}
-                defaultValue={1}
+                defaultValue={selectedBatch.minOrderQuantity}
                 onChange={(e) => setQuantities({ ...quantities, [selectedBatch.id]: Number(e.target.value) })}
               />
               <span>{selectedBatch.unit}</span>
