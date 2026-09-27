@@ -57,7 +57,11 @@ export default function NewHarvestBatch() {
     if (photo) {
       const photoForm = new FormData();
       photoForm.set('photo', photo);
-      await fetch(`/api/batches/${batch.id}/photo`, { method: 'POST', body: photoForm });
+      const photoRes = await fetch(`/api/batches/${batch.id}/photo`, { method: 'POST', body: photoForm });
+      if (!photoRes.ok) {
+        const error = await photoRes.json();
+        alert(error.message ?? error.code);
+      }
     }
 
     router.push('/farmer/batches');
