@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String
+  address    String
+  role       String
+  trustScore Int      @default(0) @map("trust_score")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  batches           HarvestBatch[]
+  preOrders         PreOrder[]
+  assignedDeliveries DeliveryRecord[] @relation("LogisticsPartner")
+  raisedDisputes    DisputeLog[]
+
+  @@map("users")
+}
+
+model HarvestBatch {
+  id                   String      @id @default(cuid())
+  farmerId             String      @map("farmer_id")
+  farmer               User        @relation(fields: [farmerId], references: [id])
+  cropName             String      @map("crop_name")
+  quantityTotal        Int         @map("quantity_total")
+  quantityAvailable    Int         @map("quantity_available")
+  unit                 String
+  pricePerUnit         Int         @map("price_per_unit")
+  harvestDateEstimate  DateTime    @map("harvest_date_estimate")
+  status               String      @default("open")
+  photoUrl             String?     @map("photo_url")
+  createdAt            DateTime    @default(now()) @map("created_at")
+
+  preOrders PreOrder[]
+
+  @@map("harvest_batches")
+}
+
+model PreOrder {
+  id           String         @id @default(cuid())
+  batchId      String         @map("batch_id")
+  batch        HarvestBatch   @relation(fields: [batchId], references: [id])
+  buyerId      String         @map("buyer_id")
+  buyer        User           @relation(fields: [buyerId], references: [id])
+  quantity     Int
+  pricePerUnit Int            @map("price_per_unit")
+  status       String         @default("pending_confirmation")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  deposits      Deposit[]
+  settlement    Settlement?
+  ledgerEntries LedgerEntry[]
+  delivery      DeliveryRecord?
+  disputes      DisputeLog[]
+
+  @@map("pre_orders")
+}
+
+model Deposit {
+  id         String   @id @default(cuid())
+  preOrderId String   @map("pre_order_id")
+  preOrder   PreOrder @relation(fields: [preOrderId], references: [id])
+  amount     Int
+  status     String   @default("paid")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("deposits")
+}
+
+model Settlement {
+  id                  String   @id @default(cuid())
+  preOrderId          String   @unique @map("pre_order_id")
+  preOrder            PreOrder @relation(fields: [preOrderId], references: [id])
+  finalQuantity       Int      @map("final_quantity")
+  finalGoodsAmount    Int      @map("final_goods_amount")
+  shippingFee         Int      @map("shipping_fee")
+  finalPaymentAmount  Int      @map("final_payment_amount")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  @@map("settlements")
+}
+
+model LedgerEntry {
+  id         String   @id @default(cuid())
+  preOrderId String   @map("pre_order_id")
+  preOrder   PreOrder @relation(fields: [preOrderId], references: [id])
+  type       String
+  amount     Int
+  note       String?
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  @@map("ledger_entries")
+}
+
+model DeliveryRecord {
+  id                 String         @id @default(cuid())
+  preOrderId         String   @unique @map("pre_order_id")
+  preOrder           PreOrder @relation(fields: [preOrderId], references: [id])
+  logisticsPartnerId String?  @map("logistics_partner_id")
+  logisticsPartner   User?    @relation("LogisticsPartner", fields: [logisticsPartnerId], references: [id])
+  method             String
+  status             String   @default("ready_for_handover")
+  trackingNote       String?  @map("tracking_note")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  @@map("delivery_records")
+}
+
+model DisputeLog {
+  id             String        @id @default(cuid())
+  preOrderId     String        @map("pre_order_id")
+  preOrder       PreOrder      @relation(fields: [preOrderId], references: [id])
+  raisedById     String   @map("raised_by_id")
+  raisedBy       User     @relation(fields: [raisedById], references: [id])
+  reason         String
+  resolutionNote String?  @map("resolution_note")
+  status         String   @default("open")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("dispute_logs")
+}
