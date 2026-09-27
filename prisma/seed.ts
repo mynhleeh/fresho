@@ -1,6 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { DEMO_ACCOUNTS } from './seedData';
 
 const prisma = new PrismaClient();
+
+function demoPasswordHashForPhone(phone: string): string {
+  return bcrypt.hashSync(`demo${phone.slice(-3)}`, 10);
+}
 
 async function main() {
   await prisma.disputeLog.deleteMany();
@@ -12,18 +18,16 @@ async function main() {
   await prisma.harvestBatch.deleteMany();
   await prisma.user.deleteMany();
 
-  const farmer = await prisma.user.create({
-    data: { name: 'Nguyen Van A', phone: '0900000001', address: 'Da Lat, Lam Dong', role: 'farmer', trustScore: 80 },
-  });
-  const buyer = await prisma.user.create({
-    data: { name: 'Tran Thi B', phone: '0900000002', address: 'Ha Noi', role: 'buyer', trustScore: 75 },
-  });
-  const admin = await prisma.user.create({
-    data: { name: 'Admin Fresh O', phone: '0900000003', address: 'HCMC', role: 'admin', trustScore: 100 },
-  });
-  const logistics = await prisma.user.create({
-    data: { name: 'Logistics Partner C', phone: '0900000004', address: 'HCMC', role: 'logistics', trustScore: 90 },
-  });
+  const createdUsers = await Promise.all(
+    DEMO_ACCOUNTS.map((account) =>
+      prisma.user.create({
+        data: { ...account, passwordHash: demoPasswordHashForPhone(account.phone) },
+      }),
+    ),
+  );
+
+  const farmer = createdUsers.find((user) => user.role === 'farmer');
+  if (!farmer) throw new Error('DEMO_ACCOUNTS must include a farmer account');
 
   await prisma.harvestBatch.create({
     data: {
@@ -38,7 +42,7 @@ async function main() {
     },
   });
 
-  console.log({ farmer, buyer, admin, logistics });
+  console.log(createdUsers.map((u) => ({ id: u.id, phone: u.phone, role: u.role })));
 }
 
 main().finally(() => prisma.$disconnect());
