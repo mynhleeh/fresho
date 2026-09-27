@@ -14,22 +14,25 @@ export default function Dashboard() {
   return (
     <AppShell role={role}>
       <div className={styles.page}>
-        <div>
+        <div className={styles.greeting}>
           <h1 className={styles.heading}>Xin chào, {user?.name ?? 'bạn'}</h1>
           <p className={styles.subheading}>
             Bạn đang đăng nhập với vai trò {ROLE_LABELS[role] ?? role}.
           </p>
         </div>
 
-        <div className={styles.quickLinks}>
-          {quickLinks.map((link) => (
-            <Link key={link.href} href={link.href} className={styles.quickLink}>
-              {link.label}
+        <div>
+          <p className={styles.quickLinksTitle}>Lối tắt</p>
+          <div className={styles.quickLinks}>
+            {quickLinks.map((link) => (
+              <Link key={link.href} href={link.href} className={styles.quickLink}>
+                {link.label}
+              </Link>
+            ))}
+            <Link href="/account" className={styles.quickLink}>
+              Quản lý tài khoản
             </Link>
-          ))}
-          <Link href="/account" className={styles.quickLink}>
-            Quản lý tài khoản
-          </Link>
+          </div>
         </div>
       </div>
     </AppShell>
