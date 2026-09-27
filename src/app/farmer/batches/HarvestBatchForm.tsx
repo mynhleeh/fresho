@@ -99,6 +99,15 @@ export function HarvestBatchForm(props: {
     if (!initialBatch) return;
     const batchId = initialBatch.id;
 
+    if (!(form.quantityTotal > 0)) {
+      alert('Sản lượng dự kiến phải lớn hơn 0');
+      return;
+    }
+    if (form.minOrderQuantity > form.quantityTotal) {
+      alert('Số lượng tối thiểu đặt trước không thể vượt quá sản lượng dự kiến');
+      return;
+    }
+
     if (form.quantityTotal !== initialBatch.quantityTotal) {
       const res = await fetch(`/api/batches/${batchId}/progress`, {
         method: 'POST',
@@ -211,7 +220,15 @@ export function HarvestBatchForm(props: {
             </div>
             <div className={styles.field}>
               <label htmlFor="unit">Đơn vị</label>
-              <input id="unit" placeholder="kg" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} required />
+              <input
+                id="unit"
+                placeholder="kg"
+                value={form.unit}
+                onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                disabled={mode === 'edit'}
+                required
+              />
+              {mode === 'edit' && <span className={styles.fieldHint}>Không thể đổi đơn vị sau khi đăng</span>}
             </div>
             <div className={styles.field}>
               <label htmlFor="pricePerUnit">Giá dự kiến (đồng) / đơn vị</label>

@@ -23,8 +23,11 @@ export async function postProgressUpdate(
     if (input.newQuantityTotal === undefined) {
       throw new ApiError('invalid_input', 'newQuantityTotal is required for quantity_adjusted', 400);
     }
-    if (input.newQuantityTotal < reserved) {
+    if (input.newQuantityTotal <= 0 || input.newQuantityTotal < reserved) {
       throw new ApiError('invalid_state', `invalid_state: newQuantityTotal cannot drop below already-reserved quantity (${reserved})`, 400);
+    }
+    if (input.newQuantityTotal < batch.minOrderQuantity) {
+      throw new ApiError('invalid_input', 'minOrderQuantity cannot exceed quantityTotal', 400);
     }
     previousValue = String(batch.quantityTotal);
     newValue = String(input.newQuantityTotal);

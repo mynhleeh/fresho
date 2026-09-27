@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { prisma } from '@/lib/db';
+import { ApiError } from '@/lib/errors';
 import { postProgressUpdate } from '@/lib/services/harvestProgressService';
 import { createPreOrder } from '@/lib/services/preOrderService';
 import { cleanupDb } from '../helpers/cleanup';
@@ -49,6 +50,26 @@ describe('postProgressUpdate', () => {
     await expect(
       postProgressUpdate(batch.id, farmer.id, { kind: 'quantity_adjusted', newQuantityTotal: 100 }),
     ).rejects.toThrow('invalid_state');
+  });
+
+  it('rejects a quantity_adjusted update that would drop below the batch minOrderQuantity', async () => {
+    const { farmer, batch } = await seedBatchWithReservation(0);
+    await prisma.harvestBatch.update({ where: { id: batch.id }, data: { minOrderQuantity: 50 } });
+
+    await expect(
+      postProgressUpdate(batch.id, farmer.id, { kind: 'quantity_adjusted', newQuantityTotal: 30 }),
+    ).rejects.toThrow(ApiError);
+
+    const updated = await prisma.harvestBatch.findUnique({ where: { id: batch.id } });
+    expect(updated?.quantityTotal).toBe(1000);
+  });
+
+  it('rejects a quantity_adjusted update to zero or negative quantity', async () => {
+    const { farmer, batch } = await seedBatchWithReservation(0);
+
+    await expect(
+      postProgressUpdate(batch.id, farmer.id, { kind: 'quantity_adjusted', newQuantityTotal: 0 }),
+    ).rejects.toThrow(ApiError);
   });
 
   it('updates harvestDateEstimate on rescheduled', async () => {
