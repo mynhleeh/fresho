@@ -3,6 +3,9 @@ import { ApiError } from '@/lib/errors';
 
 export const FARMER_SELECTABLE_BATCH_STATUSES = ['open', 'ready_for_handover', 'closed'];
 
+// TODO(business-confirm): buyer-visible statuses assumed = all non-terminal (open, awaiting_harvest, ready_for_handover); closed excluded, unconfirmed.
+const BUYER_VISIBLE_BATCH_STATUSES = ['open', 'awaiting_harvest', 'ready_for_handover'];
+
 export async function createBatch(
   farmerId: string,
   input: {
@@ -40,18 +43,31 @@ export async function createBatch(
 
 export async function listOpenBatches(filter?: {
   cropName?: string;
+  minPricePerUnit?: number;
   maxPricePerUnit?: number;
+  minQuantityAvailable?: number;
   location?: string;
   harvestDateFrom?: Date;
   harvestDateTo?: Date;
   sortBy?: 'newest' | 'trustScore' | 'harvestDate';
+  limit?: number;
+  offset?: number;
 }) {
-  return prisma.harvestBatch.findMany({
-    where: {
-      status: 'open',
+  const where = {
+      status: { in: BUYER_VISIBLE_BATCH_STATUSES },
       isHidden: false,
       ...(filter?.cropName ? { cropName: { contains: filter.cropName } } : {}),
-      ...(filter?.maxPricePerUnit !== undefined ? { pricePerUnit: { lte: filter.maxPricePerUnit } } : {}),
+      ...(filter?.minPricePerUnit !== undefined || filter?.maxPricePerUnit !== undefined
+        ? {
+            pricePerUnit: {
+              ...(filter.minPricePerUnit !== undefined ? { gte: filter.minPricePerUnit } : {}),
+              ...(filter.maxPricePerUnit !== undefined ? { lte: filter.maxPricePerUnit } : {}),
+            },
+          }
+        : {}),
+      ...(filter?.minQuantityAvailable !== undefined
+        ? { quantityAvailable: { gte: filter.minQuantityAvailable } }
+        : {}),
       ...(filter?.location ? { location: { contains: filter.location } } : {}),
       ...(filter?.harvestDateFrom || filter?.harvestDateTo
         ? {
@@ -61,15 +77,26 @@ export async function listOpenBatches(filter?: {
             },
           }
         : {}),
-    },
-    include: { farmer: { select: { trustScore: true } } },
-    orderBy:
-      filter?.sortBy === 'harvestDate'
-        ? { harvestDateEstimate: 'asc' }
-        : filter?.sortBy === 'trustScore'
-          ? { farmer: { trustScore: 'desc' } }
-          : { createdAt: 'desc' },
-  });
+  };
+  const orderBy =
+    filter?.sortBy === 'harvestDate'
+      ? { harvestDateEstimate: 'asc' as const }
+      : filter?.sortBy === 'trustScore'
+        ? { farmer: { trustScore: 'desc' as const } }
+        : { createdAt: 'desc' as const };
+
+  const [items, total] = await Promise.all([
+    prisma.harvestBatch.findMany({
+      where,
+      include: { farmer: { select: { name: true, avatarUrl: true, trustScore: true } } },
+      orderBy,
+      ...(filter?.offset !== undefined ? { skip: filter.offset } : {}),
+      ...(filter?.limit !== undefined ? { take: filter.limit } : {}),
+    }),
+    prisma.harvestBatch.count({ where }),
+  ]);
+
+  return { items, total };
 }
 
 export async function getBatch(batchId: string) {

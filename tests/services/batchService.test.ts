@@ -46,11 +46,47 @@ describe('listOpenBatches', () => {
     });
     await prisma.harvestBatch.update({ where: { id: closed.id }, data: { status: 'closed' } });
 
-    const result = await listOpenBatches({ cropName: 'Ca chua', maxPricePerUnit: 12000 });
+    const { items, total } = await listOpenBatches({ cropName: 'Ca chua', maxPricePerUnit: 12000 });
 
-    expect(result).toHaveLength(1);
-    expect(result[0].cropName).toBe('Ca chua');
-    expect(result[0].pricePerUnit).toBe(10000);
+    expect(items).toHaveLength(1);
+    expect(total).toBe(1);
+    expect(items[0].cropName).toBe('Ca chua');
+    expect(items[0].pricePerUnit).toBe(10000);
+  });
+
+  it('includes awaiting_harvest and ready_for_handover batches, excludes hidden and closed ones', async () => {
+    const farmer = await prisma.user.create({
+      data: { name: 'F', phone: '13', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    const openBatch = await createBatch(farmer.id, {
+      cropName: 'Xoai', quantityTotal: 100, unit: 'kg', pricePerUnit: 15000,
+      harvestDateEstimate: new Date(), location: 'Da Lat',
+    });
+    const awaitingBatch = await createBatch(farmer.id, {
+      cropName: 'Lua', quantityTotal: 100, unit: 'kg', pricePerUnit: 15000,
+      harvestDateEstimate: new Date(), location: 'Da Lat',
+    });
+    await prisma.harvestBatch.update({ where: { id: awaitingBatch.id }, data: { status: 'awaiting_harvest' } });
+    const readyBatch = await createBatch(farmer.id, {
+      cropName: 'Buoi', quantityTotal: 100, unit: 'kg', pricePerUnit: 15000,
+      harvestDateEstimate: new Date(), location: 'Da Lat',
+    });
+    await prisma.harvestBatch.update({ where: { id: readyBatch.id }, data: { status: 'ready_for_handover' } });
+    const closedBatch = await createBatch(farmer.id, {
+      cropName: 'Cam', quantityTotal: 100, unit: 'kg', pricePerUnit: 15000,
+      harvestDateEstimate: new Date(), location: 'Da Lat',
+    });
+    await prisma.harvestBatch.update({ where: { id: closedBatch.id }, data: { status: 'closed' } });
+    const hiddenOpenBatch = await createBatch(farmer.id, {
+      cropName: 'Dua', quantityTotal: 100, unit: 'kg', pricePerUnit: 15000,
+      harvestDateEstimate: new Date(), location: 'Da Lat',
+    });
+    await prisma.harvestBatch.update({ where: { id: hiddenOpenBatch.id }, data: { isHidden: true } });
+
+    const { items, total } = await listOpenBatches();
+
+    expect(items.map((b) => b.id).sort()).toEqual([openBatch.id, awaitingBatch.id, readyBatch.id].sort());
+    expect(total).toBe(3);
   });
 
   it('filters by location substring', async () => {
@@ -66,10 +102,10 @@ describe('listOpenBatches', () => {
       harvestDateEstimate: new Date(), location: 'Da Lat',
     });
 
-    const result = await listOpenBatches({ location: 'Tien Giang' });
+    const { items } = await listOpenBatches({ location: 'Tien Giang' });
 
-    expect(result).toHaveLength(1);
-    expect(result[0].location).toBe('Chau Thanh, Tien Giang');
+    expect(items).toHaveLength(1);
+    expect(items[0].location).toBe('Chau Thanh, Tien Giang');
   });
 
   it('filters by harvest date range', async () => {
@@ -85,13 +121,13 @@ describe('listOpenBatches', () => {
       harvestDateEstimate: new Date('2026-09-15'), location: 'Da Lat',
     });
 
-    const result = await listOpenBatches({
+    const { items } = await listOpenBatches({
       harvestDateFrom: new Date('2026-08-29'),
       harvestDateTo: new Date('2026-08-31'),
     });
 
-    expect(result).toHaveLength(1);
-    expect(result[0].harvestDateEstimate.toISOString()).toContain('2026-08-30');
+    expect(items).toHaveLength(1);
+    expect(items[0].harvestDateEstimate.toISOString()).toContain('2026-08-30');
   });
 
   it('sorts by farmer trust score when requested', async () => {
@@ -110,10 +146,30 @@ describe('listOpenBatches', () => {
       harvestDateEstimate: new Date(), location: 'Da Lat',
     });
 
-    const result = await listOpenBatches({ sortBy: 'trustScore' });
+    const { items } = await listOpenBatches({ sortBy: 'trustScore' });
 
-    expect(result[0].farmerId).toBe(highTrust.id);
-    expect(result[1].farmerId).toBe(lowTrust.id);
+    expect(items[0].farmerId).toBe(highTrust.id);
+    expect(items[1].farmerId).toBe(lowTrust.id);
+  });
+
+  it('paginates results using limit and offset while reporting the full total', async () => {
+    const farmer = await prisma.user.create({
+      data: { name: 'F', phone: '14', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    for (let i = 0; i < 15; i++) {
+      await createBatch(farmer.id, {
+        cropName: `Xoai ${i}`, quantityTotal: 100, unit: 'kg', pricePerUnit: 15000,
+        harvestDateEstimate: new Date(), location: 'Da Lat',
+      });
+    }
+
+    const firstPage = await listOpenBatches({ limit: 10, offset: 0 });
+    const secondPage = await listOpenBatches({ limit: 10, offset: 10 });
+
+    expect(firstPage.items).toHaveLength(10);
+    expect(firstPage.total).toBe(15);
+    expect(secondPage.items).toHaveLength(5);
+    expect(secondPage.total).toBe(15);
   });
 });
 

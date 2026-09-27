@@ -1,5 +1,8 @@
 .page {
-  max-width: 1080px;
+  /* TODO(business-confirm): 1800px chosen as a simple cap so the grid can reach
+     4+ columns on wide desktop monitors without stretching indefinitely on
+     ultra-wide/4K displays; no official design-system container token exists yet. */
+  max-width: 1800px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -18,24 +21,26 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--space-4);
 }
 
-.batchCard {
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pagination {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
 }
 
-.batchCard.selected {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-card-hover);
-}
-
-.batchName {
-  font-weight: 700;
-  font-size: 17px;
+.pageIndicator {
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .batchMeta {
@@ -43,15 +48,22 @@
   font-size: 14px;
 }
 
-.price {
-  font-weight: 800;
+.compareBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-primary-light);
   color: var(--color-primary);
-  font-size: 18px;
+  font-weight: 700;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
 }
 
-.bookmarkIcon {
-  width: 16px;
-  height: 16px;
+.messageOverlay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 360px;
 }
 
 .orderPanel {
