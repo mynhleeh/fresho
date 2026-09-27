@@ -338,6 +338,25 @@
   color: var(--color-danger-text);
 }
 
+.sessionCard {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-5) 28px;
+}
+
+.sessionText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sessionButton {
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
 @media (max-width: 900px) {
   .sectionGrid {
     grid-template-columns: minmax(0, 1fr);
@@ -389,5 +408,11 @@
 
   .footerActions {
     flex-direction: column-reverse;
+  }
+
+  .sessionCard {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
   }
 }

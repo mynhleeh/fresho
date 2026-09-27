@@ -9,6 +9,7 @@ import type { AccountProfile } from '@/lib/services/accountService';
 import { readAccountErrorMessage } from './accountErrors';
 import { ProfileDetailsSection } from './ProfileDetailsSection';
 import { PasswordSection } from './PasswordSection';
+import { SessionSection } from './SessionSection';
 import styles from './page.module.css';
 
 export default function AccountSettings() {
@@ -39,6 +40,7 @@ export default function AccountSettings() {
               <ProfileDetailsSection key={account.id} account={account} onSaved={setAccount} />
               <PasswordSection />
             </div>
+            <SessionSection />
           </>
         ) : (
           <div className={styles.loadingCard} aria-busy="true">Đang tải thông tin tài khoản…</div>
