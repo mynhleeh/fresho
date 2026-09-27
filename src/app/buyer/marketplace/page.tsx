@@ -1,11 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { AppShell } from '../../components/AppShell';
+import { Card } from '../../components/Card';
+import { Button } from '../../components/Button';
+import { MoneySummaryRow, formatVnd } from '../../components/MoneySummaryRow';
+import styles from './page.module.css';
 
 type Batch = { id: string; cropName: string; quantityAvailable: number; unit: string; pricePerUnit: number };
 
 export default function Marketplace() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch('/api/batches');
@@ -36,30 +42,68 @@ export default function Marketplace() {
         body: JSON.stringify({ amount: Math.round(quantity * batch.pricePerUnit * 0.2) }),
       });
       if (depositRes.ok) {
-        alert('Da dat truoc va thanh toan coc');
+        alert('Đã đặt trước và thanh toán cọc');
       } else {
         const depositError = await depositRes.json();
-        alert(`Da dat truoc nhung thanh toan coc that bai: ${depositError.message ?? depositError.code}`);
+        alert(`Đã đặt trước nhưng thanh toán cọc thất bại: ${depositError.message ?? depositError.code}`);
       }
+      setSelectedId(null);
       load();
     } else {
       alert(preOrder.message);
     }
   }
 
+  const selectedBatch = batches.find((b) => b.id === selectedId) ?? null;
+  const selectedQuantity = selectedBatch ? (quantities[selectedBatch.id] ?? 1) : 0;
+  const goodsAmount = selectedBatch ? selectedQuantity * selectedBatch.pricePerUnit : 0;
+  const depositAmount = Math.round(goodsAmount * 0.2);
+
   return (
-    <main style={{ padding: 24 }}>
-      <h1>Cho batch</h1>
-      <ul>
-        {batches.map((b) => (
-          <li key={b.id}>
-            {b.cropName} — con {b.quantityAvailable} {b.unit} @ {b.pricePerUnit}
-            <input type="number" min={1} max={b.quantityAvailable} defaultValue={1}
-              onChange={(e) => setQuantities({ ...quantities, [b.id]: Number(e.target.value) })} />
-            <button onClick={() => order(b.id)}>Dat truoc + coc 20%</button>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <AppShell role="buyer">
+      <div className={styles.page}>
+        <div>
+          <h1 className={styles.heading}>Tìm nông sản</h1>
+          <p className={styles.subheading}>Khám phá các lô hàng sắp thu hoạch.</p>
+        </div>
+
+        <div className={styles.grid}>
+          {batches.map((b) => (
+            <Card key={b.id} className={`${styles.batchCard} ${selectedId === b.id ? styles.selected : ''}`}>
+              <span className={styles.batchName}>{b.cropName}</span>
+              <span className={styles.batchMeta}>Còn lại {b.quantityAvailable} {b.unit}</span>
+              <span className={styles.price}>{formatVnd(b.pricePerUnit)}/{b.unit}</span>
+              <Button variant={selectedId === b.id ? 'primary' : 'outline'} onClick={() => setSelectedId(b.id)}>
+                Xem lô hàng
+              </Button>
+            </Card>
+          ))}
+        </div>
+
+        {selectedBatch && (
+          <Card className={styles.orderPanel}>
+            <span className={styles.orderPanelTitle}>Đặt trước lô hàng — {selectedBatch.cropName}</span>
+            <div className={styles.quantityRow}>
+              <label htmlFor="quantity">Số lượng đặt trước</label>
+              <input
+                id="quantity"
+                type="number"
+                min={1}
+                max={selectedBatch.quantityAvailable}
+                defaultValue={1}
+                onChange={(e) => setQuantities({ ...quantities, [selectedBatch.id]: Number(e.target.value) })}
+              />
+              <span>{selectedBatch.unit}</span>
+            </div>
+            <MoneySummaryRow label="Tiền hàng" value={formatVnd(goodsAmount)} />
+            <div className={styles.depositCallout}>
+              <div className={styles.depositCalloutLabel}>Đặt cọc hôm nay (20%)</div>
+              <div className={styles.depositCalloutValue}>{formatVnd(depositAmount)}</div>
+            </div>
+            <Button onClick={() => order(selectedBatch.id)}>Xác nhận và đặt cọc</Button>
+          </Card>
+        )}
+      </div>
+    </AppShell>
   );
 }

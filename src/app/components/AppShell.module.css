@@ -1,0 +1,139 @@
+.shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: var(--sidebar-width);
+  padding: var(--space-4) var(--space-2);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.logo {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.logoLeaf {
+  display: inline-block;
+}
+
+.primaryAction {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-surface);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.navItems {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-2) 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.navItem:hover {
+  background: var(--color-primary-light);
+}
+
+.navItemActive {
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.navIcon {
+  font-size: 20px;
+}
+
+.navLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.exitLink {
+  margin-top: auto;
+  font-size: 20px;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-6);
+  padding-bottom: calc(var(--bottomnav-height) + var(--space-6));
+}
+
+@media (max-width: 767px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    height: var(--bottomnav-height);
+    flex-direction: row;
+    justify-content: space-around;
+    border-right: none;
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-1) var(--space-2);
+    z-index: 20;
+  }
+
+  .logo,
+  .exitLink {
+    display: none;
+  }
+
+  .primaryAction {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .navItems {
+    flex-direction: row;
+    justify-content: space-around;
+    width: auto;
+    flex: 1;
+  }
+
+  .navItem {
+    width: auto;
+    padding: 0 var(--space-2);
+  }
+
+  .content {
+    padding: var(--space-4);
+    padding-bottom: calc(var(--bottomnav-height) + var(--space-4));
+  }
+}

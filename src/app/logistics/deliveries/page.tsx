@@ -1,5 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { AppShell } from '../../components/AppShell';
+import { Card } from '../../components/Card';
+import { Button } from '../../components/Button';
+import { StatusBadge } from '../../components/StatusBadge';
+import { preOrderStatusInfo } from '@/lib/orderStatus';
+import styles from './page.module.css';
 
 type Delivery = { preOrderId: string; status: string; preOrder: { batch: { cropName: string }; buyer: { name: string } } };
 
@@ -24,17 +30,31 @@ export default function LogisticsDeliveries() {
   }
 
   return (
-    <main style={{ padding: 24 }}>
-      <h1>Giao hang duoc giao</h1>
-      <ul>
-        {deliveries.map((d) => (
-          <li key={d.preOrderId}>
-            {d.preOrder.batch.cropName} — {d.preOrder.buyer.name} — {d.status}
-            {d.status === 'ready_for_handover' && <button onClick={() => update(d.preOrderId, 'in_transit')}>Bat dau van chuyen</button>}
-            {d.status === 'in_transit' && <button onClick={() => update(d.preOrderId, 'delivered')}>Da giao</button>}
-          </li>
-        ))}
-      </ul>
-    </main>
+    <AppShell role="logistics">
+      <div className={styles.page}>
+        <div>
+          <h1 className={styles.heading}>Giao hàng được giao</h1>
+          <p className={styles.subheading}>Theo dõi quá trình lấy hàng, vận chuyển và giao nhận.</p>
+        </div>
+
+        <div className={styles.list}>
+          {deliveries.length === 0 && <Card className={styles.empty}>Chưa có đơn giao hàng nào.</Card>}
+          {deliveries.map((d) => {
+            const status = preOrderStatusInfo(d.status);
+            return (
+              <Card key={d.preOrderId} className={styles.row}>
+                <div>
+                  <div className={styles.title}>{d.preOrder.batch.cropName}</div>
+                  <div className={styles.meta}>{d.preOrder.buyer.name}</div>
+                </div>
+                <StatusBadge label={status.label} tone={status.tone} />
+                {d.status === 'ready_for_handover' && <Button onClick={() => update(d.preOrderId, 'in_transit')}>Bắt đầu vận chuyển</Button>}
+                {d.status === 'in_transit' && <Button onClick={() => update(d.preOrderId, 'delivered')}>Đã giao</Button>}
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </AppShell>
   );
 }

@@ -1,0 +1,30 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-weight: 700;
+}
+
+.role {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}

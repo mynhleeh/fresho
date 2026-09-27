@@ -1,5 +1,8 @@
 'use client';
 
+import { Button } from './components/Button';
+import styles from './RoleSelectClient.module.css';
+
 export default function RoleSelectClient({ users }: { users: { id: string; name: string; role: string }[] }) {
   const roleToPath: Record<string, string> = {
     farmer: '/farmer/batches',
@@ -19,11 +22,16 @@ export default function RoleSelectClient({ users }: { users: { id: string; name:
   }
 
   return (
-    <ul>
+    <ul className={styles.list}>
       {users.map((u) => (
-        <li key={u.id}>
-          {u.name} ({u.role}){' '}
-          <button onClick={() => select(u.id, u.role)}>Dang nhap</button>
+        <li key={u.id} className={styles.row}>
+          <span className={styles.identity}>
+            <span className={styles.name}>{u.name}</span>
+            <span className={styles.role}>{u.role}</span>
+          </span>
+          <Button type="button" onClick={() => select(u.id, u.role)}>
+            Đăng nhập
+          </Button>
         </li>
       ))}
     </ul>
