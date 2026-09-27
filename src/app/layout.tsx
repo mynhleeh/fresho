@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
 import { RegisterServiceWorker } from "./register-sw";
+import { AuthProvider } from "./auth/AuthContext";
 
 const appSans = Nunito({
   variable: "--font-app-sans",
@@ -23,8 +24,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="vi" className={appSans.variable}>
       <body>
-        {children}
-        <RegisterServiceWorker />
+        <AuthProvider>
+          {children}
+          <RegisterServiceWorker />
+        </AuthProvider>
       </body>
     </html>
   );
