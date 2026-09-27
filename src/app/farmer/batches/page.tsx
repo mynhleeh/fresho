@@ -15,6 +15,7 @@ export default function FarmerBatches() {
 
   async function load() {
     const res = await fetch('/api/batches?mine=1');
+    if (!res.ok) return;
     setBatches(await res.json());
   }
 

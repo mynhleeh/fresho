@@ -13,6 +13,7 @@ export default function AdminDisputes() {
 
   async function load() {
     const res = await fetch('/api/disputes');
+    if (!res.ok) return;
     setDisputes(await res.json());
   }
 

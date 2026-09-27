@@ -12,7 +12,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<PreOrder[]>([]);
 
   useEffect(() => {
-    fetch('/api/admin/orders').then((r) => r.json()).then(setOrders);
+    fetch('/api/admin/orders').then((r) => (r.ok ? r.json() : [])).then(setOrders);
   }, []);
 
   return (

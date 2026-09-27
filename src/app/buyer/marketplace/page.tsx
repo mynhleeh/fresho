@@ -44,6 +44,7 @@ export default function Marketplace() {
     if (locationFilter) params.set('location', locationFilter);
     if (sortBy !== 'newest') params.set('sortBy', sortBy);
     const res = await fetch(`/api/batches?${params.toString()}`);
+    if (!res.ok) return;
     setBatches(await res.json());
   }
 

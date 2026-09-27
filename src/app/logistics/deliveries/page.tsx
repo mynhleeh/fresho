@@ -16,6 +16,7 @@ export default function LogisticsDeliveries() {
 
   async function load() {
     const res = await fetch('/api/deliveries/mine');
+    if (!res.ok) return;
     setDeliveries(await res.json());
   }
 

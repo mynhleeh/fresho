@@ -20,7 +20,7 @@ export default function BuyerOrders() {
 
   async function load() {
     const [ordersRes, meRes] = await Promise.all([fetch('/api/preorders/mine'), fetch('/api/auth/me')]);
-    setOrders(await ordersRes.json());
+    if (ordersRes.ok) setOrders(await ordersRes.json());
     setUserId(meRes.ok ? (await meRes.json())?.id ?? null : null);
   }
 

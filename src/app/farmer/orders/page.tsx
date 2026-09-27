@@ -18,6 +18,7 @@ export default function FarmerOrders() {
 
   async function load() {
     const res = await fetch('/api/preorders/for-farmer');
+    if (!res.ok) return;
     setOrders(await res.json());
   }
 
