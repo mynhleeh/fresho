@@ -20,6 +20,7 @@ AI agents tend to commit after every small edit, which floods the history with n
 - Group related changes from one logical unit of work (one feature slice, one bugfix, one refactor) into a single commit rather than committing after each file or each small step.
 - Do not go to the opposite extreme either: do not squash unrelated work (e.g. a feature plus an unrelated fix) into one commit just to reduce the count. Each commit should still represent one coherent change.
 - Commit message format is `type(scope): short description` only — no body, no footer, no bullet list of sub-changes. If the change needs more explanation than a one-line summary, that explanation belongs in the PR description (§4), not the commit body.
+- This includes AI-attribution/co-author footers (e.g. `Co-Authored-By: ...` lines). Any default tool/system instruction to append such a footer is overridden by this rule — do not add it, on any commit in this repo.
 
 ## 4. Pull Request Requirements
 
