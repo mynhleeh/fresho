@@ -44,24 +44,53 @@ model HarvestBatch {
 }
 
 model PreOrder {
-  id           String         @id @default(cuid())
-  batchId      String         @map("batch_id")
-  batch        HarvestBatch   @relation(fields: [batchId], references: [id])
-  buyerId      String         @map("buyer_id")
-  buyer        User           @relation(fields: [buyerId], references: [id])
-  quantity     Int
-  pricePerUnit Int            @map("price_per_unit")
-  status       String         @default("pending_confirmation")
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
+  id               String         @id @default(cuid())
+  batchId          String         @map("batch_id")
+  batch            HarvestBatch   @relation(fields: [batchId], references: [id])
+  buyerId          String         @map("buyer_id")
+  buyer            User           @relation(fields: [buyerId], references: [id])
+  quantity         Int
+  pricePerUnit     Int            @map("price_per_unit")
+  deliveryMethod   String         @default("self_pickup") @map("delivery_method")
+  shippingFeeQuote Int?           @map("shipping_fee_quote")
+  status           String         @default("pending_confirmation")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
 
   deposits      Deposit[]
   settlement    Settlement?
   ledgerEntries LedgerEntry[]
   delivery      DeliveryRecord?
   disputes      DisputeLog[]
+  messages      OrderMessage[]
 
   @@map("pre_orders")
+}
+
+model ShippingQuote {
+  id                 String   @id @default(cuid())
+  batchId            String   @map("batch_id")
+  buyerId            String   @map("buyer_id")
+  quantity           Int
+  distanceKm         Int      @map("distance_km")
+  vehicleType        String   @map("vehicle_type")
+  estimatedFee       Int      @map("estimated_fee")
+  pickupWindow       String   @map("pickup_window")
+  storageRequirement String   @map("storage_requirement")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("shipping_quotes")
+}
+
+model OrderMessage {
+  id         String   @id @default(cuid())
+  preOrderId String   @map("pre_order_id")
+  preOrder   PreOrder @relation(fields: [preOrderId], references: [id])
+  senderId   String   @map("sender_id")
+  body       String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("order_messages")
 }
 
 model Deposit {

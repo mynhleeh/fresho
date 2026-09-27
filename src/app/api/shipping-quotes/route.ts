@@ -1,0 +1,29 @@
+import { getCurrentUser } from '@/lib/session';
+import { quoteShipping, type VehicleType } from '@/lib/services/shippingQuoteService';
+import { ApiError, errorResponse } from '@/lib/errors';
+
+const VEHICLE_TYPES: VehicleType[] = ['motorbike', 'small_truck', 'refrigerated_truck'];
+
+export async function POST(request: Request) {
+  try {
+    const user = await getCurrentUser(request);
+    if (!user || user.role !== 'buyer') throw new ApiError('forbidden', 'Only buyers can request a shipping quote', 403);
+
+    const { batchId, quantity, vehicleType, distanceKm } = await request.json();
+    if (!VEHICLE_TYPES.includes(vehicleType)) {
+      throw new ApiError('invalid_input', `vehicleType must be one of ${VEHICLE_TYPES.join(', ')}`, 400);
+    }
+
+    const quote = await quoteShipping({
+      batchId,
+      buyerId: user.id,
+      quantity: Number(quantity),
+      vehicleType,
+      distanceKm: Number(distanceKm),
+    });
+    console.log(`shipping quote created batchId=${batchId}`);
+    return Response.json(quote, { status: 201 });
+  } catch (err) {
+    return errorResponse(err);
+  }
+}

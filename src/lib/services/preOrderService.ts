@@ -25,7 +25,10 @@ const NEXT_STATUS: Record<PreOrderEvent, string> = {
   confirm_receipt: 'settled',
 };
 
-export async function createPreOrder(buyerId: string, input: { batchId: string; quantity: number }) {
+export async function createPreOrder(
+  buyerId: string,
+  input: { batchId: string; quantity: number; deliveryMethod?: 'self_pickup' | 'carrier'; shippingFeeQuote?: number },
+) {
   const batch = await prisma.harvestBatch.findUnique({ where: { id: input.batchId } });
   if (!batch) throw new ApiError('batch_not_found', 'Batch not found', 404);
   if (batch.status !== 'open') throw new ApiError('batch_closed', 'Batch is not open', 400);
@@ -38,6 +41,8 @@ export async function createPreOrder(buyerId: string, input: { batchId: string; 
         buyerId,
         quantity: input.quantity,
         pricePerUnit: batch.pricePerUnit,
+        deliveryMethod: input.deliveryMethod ?? 'self_pickup',
+        shippingFeeQuote: input.deliveryMethod === 'carrier' ? input.shippingFeeQuote : null,
         status: 'pending_confirmation',
       },
     });
