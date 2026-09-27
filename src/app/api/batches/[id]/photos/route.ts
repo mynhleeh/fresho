@@ -1,13 +1,17 @@
 import { getCurrentUser } from '@/lib/session';
-import { addBatchPhoto, listPhotosByBatch } from '@/lib/services/batchPhotoService';
-import { assertBatchOwnership } from '@/lib/services/batchService';
+import { addBatchPhoto, listPhotosByBatch, listPhotosForEditing } from '@/lib/services/batchPhotoService';
+import { assertBatchOwnership, getBatch } from '@/lib/services/batchService';
 import { saveUploadedBatchImage } from '@/lib/uploadStorage';
 import { ApiError, errorResponse } from '@/lib/errors';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    const photos = await listPhotosByBatch(id);
+    const user = await getCurrentUser(request);
+    const batch = await getBatch(id);
+    const isOwningFarmer = !!user && user.role === 'farmer' && batch?.farmerId === user.id;
+
+    const photos = isOwningFarmer ? await listPhotosForEditing(id) : await listPhotosByBatch(id);
     return Response.json(photos);
   } catch (err) {
     console.error(`[harvest_batch:${id}] list photos failed`, err);

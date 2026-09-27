@@ -13,6 +13,26 @@ export function listPhotosByBatch(batchId: string) {
   });
 }
 
+// Batches created before the multi-photo feature existed (seeded demo data, or
+// photos uploaded through the old single-photo endpoint) have `harvestBatch.photoUrl`
+// set but no matching `HarvestBatchPhoto` row, so the edit panel's gallery loaded
+// empty even though the batch card correctly showed the cover photo. Materializing
+// that legacy photo into a real row on first read (bounded to the one batch being
+// viewed, purely additive, `photoUrl` unchanged) lets the existing add/remove/set-cover
+// flows handle it like any other photo from then on.
+export async function listPhotosForEditing(batchId: string) {
+  const existingPhotos = await listPhotosByBatch(batchId);
+  if (existingPhotos.length > 0) return existingPhotos;
+
+  const batch = await prisma.harvestBatch.findUnique({ where: { id: batchId } });
+  if (!batch?.photoUrl) return existingPhotos;
+
+  await prisma.harvestBatchPhoto.create({
+    data: { batchId, url: batch.photoUrl, position: 0, isCover: true },
+  });
+  return listPhotosByBatch(batchId);
+}
+
 export async function addBatchPhoto(batchId: string, farmerId: string, url: string) {
   await assertBatchOwnership(batchId, farmerId);
 

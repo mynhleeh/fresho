@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { prisma } from '@/lib/db';
 import { createBatch } from '@/lib/services/batchService';
-import { addBatchPhoto, deleteBatchPhoto, setCoverPhoto, listPhotosByBatch, MAX_PHOTOS_PER_BATCH } from '@/lib/services/batchPhotoService';
+import { addBatchPhoto, deleteBatchPhoto, setCoverPhoto, listPhotosByBatch, listPhotosForEditing, MAX_PHOTOS_PER_BATCH } from '@/lib/services/batchPhotoService';
 import { ApiError } from '@/lib/errors';
 import { cleanupDb } from '../helpers/cleanup';
 
@@ -119,5 +119,53 @@ describe('deleteBatchPhoto', () => {
 
     const updated = await prisma.harvestBatch.findUnique({ where: { id: batch.id } });
     expect(updated?.photoUrl).toBe('/uploads/batches/a.jpg');
+  });
+});
+
+describe('listPhotosForEditing', () => {
+  beforeEach(async () => {
+    await cleanupDb();
+  });
+
+  it('backfills a legacy cover photo (photoUrl set directly, no HarvestBatchPhoto row) so the edit panel can show it', async () => {
+    const { batch } = await createFarmerAndBatch();
+    await prisma.harvestBatch.update({ where: { id: batch.id }, data: { photoUrl: '/uploads/batches/legacy.jpg' } });
+    expect(await listPhotosByBatch(batch.id)).toHaveLength(0);
+
+    const photos = await listPhotosForEditing(batch.id);
+
+    expect(photos).toHaveLength(1);
+    expect(photos[0]).toMatchObject({ url: '/uploads/batches/legacy.jpg', isCover: true });
+    // photoUrl itself must stay exactly as it was — this only adds the matching row.
+    const unchanged = await prisma.harvestBatch.findUnique({ where: { id: batch.id } });
+    expect(unchanged?.photoUrl).toBe('/uploads/batches/legacy.jpg');
+  });
+
+  it('does not duplicate rows when called again after the backfill', async () => {
+    const { batch } = await createFarmerAndBatch();
+    await prisma.harvestBatch.update({ where: { id: batch.id }, data: { photoUrl: '/uploads/batches/legacy.jpg' } });
+
+    await listPhotosForEditing(batch.id);
+    const photos = await listPhotosForEditing(batch.id);
+
+    expect(photos).toHaveLength(1);
+  });
+
+  it('returns an empty list for a batch with no photo at all', async () => {
+    const { batch } = await createFarmerAndBatch();
+
+    const photos = await listPhotosForEditing(batch.id);
+
+    expect(photos).toHaveLength(0);
+  });
+
+  it('returns the real photos untouched when they already exist', async () => {
+    const { farmer, batch } = await createFarmerAndBatch();
+    await addBatchPhoto(batch.id, farmer.id, '/uploads/batches/a.jpg');
+
+    const photos = await listPhotosForEditing(batch.id);
+
+    expect(photos).toHaveLength(1);
+    expect(photos[0].url).toBe('/uploads/batches/a.jpg');
   });
 });
