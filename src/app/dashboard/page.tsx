@@ -8,6 +8,7 @@ import type { AppRole } from '../components/roleNav';
 import { useCreateBatchPanel } from '../farmer/batches/CreateBatchPanelContext';
 import { HarvestHorizon } from './HarvestHorizon';
 import { ActionQueue, OrderPipeline } from './DashboardPanels';
+import { KpiRow, RecentOrdersTable } from './DashboardOverview';
 import { useDashboardData, type DashboardData } from './useDashboardData';
 import styles from './page.module.css';
 
@@ -49,7 +50,7 @@ export default function Dashboard() {
             </h1>
             <p className={styles.summaryLine}>
               {ROLE_LABELS[role] ?? role}
-              {data && ` · ${data.activeOrderCount} đơn đang chạy · ${data.actionItems.length} việc cần xử lý`}
+              {data && ` · ${data.actionItems.length > 0 ? `${data.actionItems.length} việc đang chờ bạn` : 'Không có việc nào đang chờ'}`}
             </p>
           </div>
           <RolePrimaryAction role={role} />
@@ -66,10 +67,16 @@ function DashboardBody({ data, failed, role }: { data: DashboardData | null; fai
 
   return (
     <>
-      <HarvestHorizon days={data.horizon.days} laterCount={data.horizon.laterCount} entryNoun={HORIZON_ENTRY_NOUN[role]} />
-      <div className={styles.panelGrid}>
-        <ActionQueue items={data.actionItems} ordersHref={ORDERS_HREF[role]} />
-        <OrderPipeline stages={data.stages} closedCount={data.closedCount} ordersHref={ORDERS_HREF[role]} />
+      <KpiRow kpis={data.kpis} />
+      <div className={styles.mainGrid}>
+        <div className={styles.mainColumn}>
+          <HarvestHorizon days={data.horizon.days} laterCount={data.horizon.laterCount} entryNoun={HORIZON_ENTRY_NOUN[role]} />
+          <RecentOrdersTable orders={data.recentOrders} ordersHref={ORDERS_HREF[role]} />
+        </div>
+        <div className={styles.sideColumn}>
+          <ActionQueue items={data.actionItems} ordersHref={ORDERS_HREF[role]} />
+          <OrderPipeline stages={data.stages} closedCount={data.closedCount} ordersHref={ORDERS_HREF[role]} />
+        </div>
       </div>
     </>
   );

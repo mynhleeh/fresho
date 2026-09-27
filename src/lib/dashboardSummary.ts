@@ -105,3 +105,29 @@ export function logisticsActionItems(deliveries: DeliveryForAction[]): ActionIte
     return [];
   });
 }
+
+export type DashboardKpi = { label: string; value: string; note: string; highlight?: boolean };
+
+type DepositRecord = { amount: number; status: string };
+
+export function sumPaidDeposits(orders: { deposits?: DepositRecord[] }[]): number {
+  return orders.reduce(
+    (total, order) => total + (order.deposits ?? []).filter((deposit) => deposit.status === 'paid').reduce((sum, deposit) => sum + deposit.amount, 0),
+    0,
+  );
+}
+
+export function bookedVolume(batches: { status: string; quantityTotal: number; quantityAvailable: number }[]) {
+  const liveBatches = batches.filter((batch) => batch.status !== 'closed');
+  const total = liveBatches.reduce((sum, batch) => sum + batch.quantityTotal, 0);
+  const booked = liveBatches.reduce((sum, batch) => sum + (batch.quantityTotal - batch.quantityAvailable), 0);
+  return { booked, total, percent: total === 0 ? 0 : Math.round((booked / total) * 100) };
+}
+
+export function orderValue(order: { quantity: number; pricePerUnit: number }): number {
+  return order.quantity * order.pricePerUnit;
+}
+
+export function formatVnd(amount: number): string {
+  return `${amount.toLocaleString('vi-VN')} ₫`;
+}

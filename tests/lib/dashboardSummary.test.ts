@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildHarvestHorizon, buyerActionItems, countOrdersByStage, farmerActionItems } from '@/lib/dashboardSummary';
+import { bookedVolume, buildHarvestHorizon, buyerActionItems, countOrdersByStage, farmerActionItems, orderValue, sumPaidDeposits } from '@/lib/dashboardSummary';
 
 const today = new Date(2026, 8, 27, 15, 30);
 
@@ -63,5 +63,37 @@ describe('buyerActionItems', () => {
     const items = buyerActionItems([orderWith('delivered'), orderWith('settled')]);
     expect(items).toHaveLength(1);
     expect(items[0].urgent).toBe(true);
+  });
+});
+
+describe('sumPaidDeposits', () => {
+  it('adds only paid deposit records across orders', () => {
+    const orders = [
+      { deposits: [{ amount: 300_000, status: 'paid' }, { amount: 50_000, status: 'pending' }] },
+      { deposits: [{ amount: 1_200_000, status: 'paid' }] },
+      {},
+    ];
+    expect(sumPaidDeposits(orders)).toBe(1_500_000);
+  });
+});
+
+describe('bookedVolume', () => {
+  it('ignores closed batches and rounds the booked share', () => {
+    const batches = [
+      { status: 'open', quantityTotal: 600, quantityAvailable: 200 },
+      { status: 'awaiting_harvest', quantityTotal: 300, quantityAvailable: 300 },
+      { status: 'closed', quantityTotal: 1000, quantityAvailable: 0 },
+    ];
+    expect(bookedVolume(batches)).toEqual({ booked: 400, total: 900, percent: 44 });
+  });
+
+  it('reports zero percent when there is no live volume', () => {
+    expect(bookedVolume([])).toEqual({ booked: 0, total: 0, percent: 0 });
+  });
+});
+
+describe('orderValue', () => {
+  it('multiplies integer quantity by integer unit price', () => {
+    expect(orderValue({ quantity: 600, pricePerUnit: 18_000 })).toBe(10_800_000);
   });
 });

@@ -10,7 +10,7 @@ export function ActionQueue({ items, ordersHref }: { items: ActionItem[]; orders
   const visibleItems = sortedItems.slice(0, MAX_ACTION_ITEMS);
 
   return (
-    <section className={styles.panel} aria-labelledby="action-queue-title">
+    <section className={styles.panel} aria-labelledby="action-queue-title" data-slot="actions">
       <header className={styles.panelHeader}>
         <h2 id="action-queue-title" className={styles.panelTitle}>Cần bạn xử lý</h2>
         {items.length > 0 && <span className={styles.countPill}>{items.length}</span>}
