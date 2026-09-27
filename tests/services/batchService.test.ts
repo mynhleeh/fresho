@@ -177,6 +177,20 @@ describe('updateBatch', () => {
     expect(updated.minOrderQuantity).toBe(25);
     expect(updated.description).toBe('Đóng gói theo thùng xốp 10kg.');
   });
+
+  it('rejects a minOrderQuantity greater than the batch\'s existing quantityTotal', async () => {
+    const farmer = await prisma.user.create({
+      data: { name: 'F', phone: '12', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    const batch = await createBatch(farmer.id, {
+      cropName: 'Xoài cát', quantityTotal: 100, unit: 'kg', pricePerUnit: 20000,
+      harvestDateEstimate: new Date(), location: 'Tien Giang',
+    });
+
+    await expect(
+      updateBatch(batch.id, farmer.id, { minOrderQuantity: 150 }),
+    ).rejects.toThrow('minOrderQuantity cannot exceed quantityTotal');
+  });
 });
 
 describe('setBatchPhoto', () => {

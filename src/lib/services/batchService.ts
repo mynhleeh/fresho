@@ -92,6 +92,9 @@ export async function updateBatch(
   const batch = await prisma.harvestBatch.findUnique({ where: { id: batchId } });
   if (!batch) throw new ApiError('batch_not_found', 'Batch not found', 404);
   if (batch.farmerId !== farmerId) throw new ApiError('forbidden', 'Not your batch', 403);
+  if (input.minOrderQuantity !== undefined && input.minOrderQuantity > batch.quantityTotal) {
+    throw new ApiError('invalid_input', 'minOrderQuantity cannot exceed quantityTotal', 400);
+  }
 
   return prisma.harvestBatch.update({ where: { id: batchId }, data: input });
 }
