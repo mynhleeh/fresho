@@ -1,12 +1,11 @@
-import { prisma } from '@/lib/db';
+import { login } from '@/lib/services/authService';
 import { setSessionCookie } from '@/lib/session';
-import { ApiError, errorResponse } from '@/lib/errors';
+import { errorResponse } from '@/lib/errors';
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await request.json();
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new ApiError('user_not_found', 'No such user', 404);
+    const { phone, password } = await request.json();
+    const user = await login({ phone, password });
 
     return Response.json(
       { id: user.id, name: user.name, role: user.role },

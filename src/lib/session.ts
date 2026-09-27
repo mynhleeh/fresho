@@ -6,6 +6,10 @@ export function setSessionCookie(userId: string): string {
   return `${COOKIE_NAME}=${userId}; Path=/; HttpOnly; SameSite=Lax`;
 }
 
+export function clearSessionCookie(): string {
+  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+}
+
 function parseCookie(header: string | null, name: string): string | null {
   if (!header) return null;
   const match = header.split(';').map((c) => c.trim()).find((c) => c.startsWith(`${name}=`));
@@ -17,5 +21,5 @@ export async function getCurrentUser(request: Request) {
   if (!userId) return null;
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return null;
-  return { id: user.id, role: user.role };
+  return { id: user.id, name: user.name, role: user.role };
 }

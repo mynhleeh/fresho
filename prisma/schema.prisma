@@ -10,8 +10,9 @@ datasource db {
 model User {
   id         String   @id @default(cuid())
   name       String
-  phone      String
+  phone      String   @unique
   address    String
+  passwordHash String @default("") @map("password_hash")
   role       String
   trustScore Int      @default(0) @map("trust_score")
   createdAt  DateTime @default(now()) @map("created_at")
