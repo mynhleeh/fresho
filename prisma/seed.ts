@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { DEMO_ACCOUNTS, DEMO_HARVEST_BATCHES } from './seedData';
-
-const prisma = new PrismaClient();
+import { prisma } from '../src/lib/db';
+import { DEMO_ACCOUNTS, DEMO_HARVEST_BATCHES, DEMO_PRE_ORDERS } from './seedData';
+import { createPreOrder } from '../src/lib/services/preOrderService';
+import { advanceDemoPreOrder } from './seedPreOrderProgression';
 
 function demoPasswordHashForPhone(phone: string): string {
   return bcrypt.hashSync(`demo${phone.slice(-3)}`, 10);
@@ -15,24 +15,47 @@ async function main() {
   await prisma.settlement.deleteMany();
   await prisma.deposit.deleteMany();
   await prisma.preOrder.deleteMany();
+  await prisma.savedBatch.deleteMany();
+  await prisma.harvestProgressUpdate.deleteMany();
+  await prisma.harvestBatchPhoto.deleteMany();
   await prisma.harvestBatch.deleteMany();
   await prisma.user.deleteMany();
 
   const createdUsers = await Promise.all(
-    DEMO_ACCOUNTS.map((account) =>
-      prisma.user.create({
-        data: { ...account, passwordHash: demoPasswordHashForPhone(account.phone) },
-      }),
-    ),
+    DEMO_ACCOUNTS.map((account) => {
+      const { farmerKey: _farmerKey, buyerKey: _buyerKey, ...userFields } = account;
+      return prisma.user.create({
+        data: { ...userFields, passwordHash: demoPasswordHashForPhone(account.phone) },
+      });
+    }),
   );
 
-  const farmer = createdUsers.find((user) => user.role === 'farmer');
-  if (!farmer) throw new Error('DEMO_ACCOUNTS must include a farmer account');
+  const farmersByKey = new Map(
+    DEMO_ACCOUNTS.map((account, index) => [account.farmerKey, createdUsers[index]] as const).filter(
+      (entry): entry is [string, (typeof createdUsers)[number]] => entry[0] !== undefined,
+    ),
+  );
+  if (farmersByKey.size === 0) throw new Error('DEMO_ACCOUNTS must include a farmer account');
+
+  const buyersByKey = new Map(
+    DEMO_ACCOUNTS.map((account, index) => [account.buyerKey, createdUsers[index]] as const).filter(
+      (entry): entry is [string, (typeof createdUsers)[number]] => entry[0] !== undefined,
+    ),
+  );
+  if (buyersByKey.size === 0) throw new Error('DEMO_ACCOUNTS must include a buyer account');
 
   const buyer = createdUsers.find((user) => user.role === 'buyer');
   if (!buyer) throw new Error('DEMO_ACCOUNTS must include a buyer account');
 
+  const logisticsUser = createdUsers.find((user) => user.role === 'logistics');
+  if (!logisticsUser) throw new Error('DEMO_ACCOUNTS must include a logistics account');
+
+  const batchesByKey = new Map<string, Awaited<ReturnType<typeof prisma.harvestBatch.create>>>();
+
   for (const batch of DEMO_HARVEST_BATCHES) {
+    const farmer = farmersByKey.get(batch.farmerKey);
+    if (!farmer) throw new Error(`No DEMO_ACCOUNTS farmer found for farmerKey "${batch.farmerKey}"`);
+
     const createdBatch = await prisma.harvestBatch.create({
       data: {
         farmerId: farmer.id,
@@ -50,6 +73,8 @@ async function main() {
         description: batch.description,
       },
     });
+
+    batchesByKey.set(batch.batchKey, createdBatch);
 
     if (batch.preOrderStatus) {
       // TODO(business-confirm): seed pre_order quantities/prices below are illustrative demo values only.
@@ -78,6 +103,28 @@ async function main() {
         });
       }
     }
+  }
+
+  for (const demoPreOrder of DEMO_PRE_ORDERS) {
+    const preOrderBuyer = buyersByKey.get(demoPreOrder.buyerKey);
+    if (!preOrderBuyer) throw new Error(`No DEMO_ACCOUNTS buyer found for buyerKey "${demoPreOrder.buyerKey}"`);
+
+    const targetBatch = batchesByKey.get(demoPreOrder.batchKey);
+    if (!targetBatch) throw new Error(`No DEMO_HARVEST_BATCHES batch found for batchKey "${demoPreOrder.batchKey}"`);
+
+    const preOrder = await createPreOrder(preOrderBuyer.id, {
+      batchId: targetBatch.id,
+      quantity: demoPreOrder.quantity,
+    });
+
+    await advanceDemoPreOrder(
+      preOrder.id,
+      targetBatch.id,
+      targetBatch.farmerId,
+      preOrderBuyer.id,
+      logisticsUser.id,
+      demoPreOrder.targetStatus,
+    );
   }
 
   console.log(createdUsers.map((u) => ({ id: u.id, phone: u.phone, role: u.role })));
