@@ -58,13 +58,31 @@ function ThumbnailPlaceholder({ batch, dimmedClass }: { batch: Batch; dimmedClas
   );
 }
 
+// True when a different batch's edit panel is open, so this card should recede
+// into a low-detail gray frame rather than compete visually with the focused one.
+// Distinct from Batch.isHidden, which is the buyer-facing public visibility toggle.
 export function BatchCard(props: {
   batch: Batch;
   onEdit?: () => void;
   onToggleHidden?: () => void;
+  isEditFocusElsewhere?: boolean;
 }) {
   const { batch } = props;
   const hasActions = props.onEdit || props.onToggleHidden;
+
+  if (props.isEditFocusElsewhere) {
+    return (
+      <Card className={`${styles.card} ${styles.skeletonCard}`} aria-hidden="true">
+        <div className={styles.thumbnailFrame}>
+          <div className={styles.skeletonThumbnail} />
+        </div>
+        <div className={styles.body}>
+          <div className={styles.skeletonLine} style={{ width: '70%' }} />
+          <div className={styles.skeletonLine} style={{ width: '45%' }} />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className={styles.card}>

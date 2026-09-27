@@ -30,6 +30,10 @@ type FormState = {
   status: string;
 };
 
+// Placeholder keys standing in for other listings a buyer would see around this
+// one in their own batch grid — not real batches, just gray frames for context.
+const SIMULATED_BUYER_GRID_NEIGHBORS = ['neighbor-1', 'neighbor-2', 'neighbor-3'];
+
 const FARMER_SELECTABLE_STATUSES = [
   { value: 'open', label: 'Đang mở đặt trước' },
   { value: 'ready_for_handover', label: 'Sẵn sàng bàn giao' },
@@ -72,7 +76,6 @@ export function HarvestBatchForm(props: {
   onCancel?: () => void;
 }) {
   const { mode, initialBatch } = props;
-  const [tab, setTab] = useState<'info' | 'preview'>('info');
   const [form, setForm] = useState<FormState>(() => formStateFromBatch(initialBatch));
   const [photos, setPhotos] = useState<FormPhoto[]>([]);
   const [advisory, setAdvisory] = useState<{
@@ -284,32 +287,26 @@ export function HarvestBatchForm(props: {
   return (
     <div className={styles.formRoot}>
       <div className={styles.stickyHeader}>
-        <div className={styles.tabBar}>
-          <button
-            type="button"
-            className={tab === 'info' ? styles.tabActive : styles.tab}
-            onClick={() => setTab('info')}
-          >
-            Thông tin
-          </button>
-          <button
-            type="button"
-            className={tab === 'preview' ? styles.tabActive : styles.tab}
-            onClick={() => setTab('preview')}
-          >
-            Xem trước
-          </button>
-        </div>
         <div className={styles.liveSummary}>
           {form.cropName || 'Chưa đặt tên'} · {formatVnd(form.pricePerUnit)}/{form.unit} · {form.quantityTotal} {form.unit}
+        </div>
+      </div>
+
+      <div className={styles.stackedBody}>
+      <div className={styles.previewSection}>
+        <div className={styles.previewColumnLabel}>Xem trước cho người mua</div>
+        <div className={styles.previewGrid}>
+          <BatchCard batch={previewBatch} />
+          {SIMULATED_BUYER_GRID_NEIGHBORS.map((key) => (
+            <BatchCard key={key} batch={previewBatch} isEditFocusElsewhere />
+          ))}
         </div>
       </div>
 
       <form
         id="harvest-batch-form"
         onSubmit={submit}
-        className={styles.scrollBody}
-        style={{ display: tab === 'info' ? undefined : 'none' }}
+        className={styles.formColumn}
       >
         <div className={styles.grid}>
             <div className={styles.field}>
@@ -427,12 +424,6 @@ export function HarvestBatchForm(props: {
             </div>
           )}
       </form>
-
-      <div className={styles.scrollBody} style={{ display: tab === 'preview' ? undefined : 'none' }}>
-        <div className={styles.previewTab}>
-          <BatchCard batch={previewBatch} />
-          {form.description && <p className={styles.previewDescription}>{form.description}</p>}
-        </div>
       </div>
 
       <div className={styles.stickyFooter}>

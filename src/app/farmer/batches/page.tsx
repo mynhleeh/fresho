@@ -47,6 +47,7 @@ export default function FarmerBatches() {
               batch={b}
               onEdit={() => setEditingBatchId(b.id)}
               onToggleHidden={() => toggleHidden(b.id)}
+              isEditFocusElsewhere={editingBatchId !== null && editingBatchId !== b.id}
             />
           ))}
         </div>

@@ -83,3 +83,16 @@
   gap: 8px;
   margin-top: 8px;
 }
+.skeletonCard {
+  pointer-events: none;
+}
+.skeletonThumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-border);
+}
+.skeletonLine {
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+}
