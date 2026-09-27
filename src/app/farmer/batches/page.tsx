@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AppShell } from '../../components/AppShell';
 import { Button } from '../../components/Button';
-import { BatchCard, type Batch } from './BatchCard';
+import { Overlay } from '../../components/Overlay';
+import { BatchCard } from './BatchCard';
+import { HarvestBatchForm, type EditableBatch } from './HarvestBatchForm';
 import styles from './page.module.css';
 
 export default function FarmerBatches() {
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [progressBatchId, setProgressBatchId] = useState<string | null>(null);
-  const [progressQuantity, setProgressQuantity] = useState(0);
-  const [progressDate, setProgressDate] = useState('');
+  const [batches, setBatches] = useState<EditableBatch[]>([]);
+  const [editingBatchId, setEditingBatchId] = useState<string | null>(null);
 
   async function load() {
     const res = await fetch('/api/batches?mine=1');
@@ -20,28 +20,6 @@ export default function FarmerBatches() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
   useEffect(() => { load(); }, []);
 
-  async function postProgress(batchId: string, kind: 'on_track' | 'quantity_adjusted' | 'rescheduled') {
-    const body =
-      kind === 'quantity_adjusted'
-        ? { kind, newQuantityTotal: progressQuantity }
-        : kind === 'rescheduled'
-          ? { kind, newHarvestDateEstimate: progressDate }
-          : { kind };
-
-    const res = await fetch(`/api/batches/${batchId}/progress`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const error = await res.json();
-      alert(error.message ?? error.code);
-      return;
-    }
-    setProgressBatchId(null);
-    load();
-  }
-
   async function updateStage(batchId: string, stage: 'awaiting_harvest' | 'ready_for_handover') {
     await fetch(`/api/batches/${batchId}/ready`, {
       method: 'PATCH',
@@ -50,6 +28,8 @@ export default function FarmerBatches() {
     });
     load();
   }
+
+  const editingBatch = batches.find((b) => b.id === editingBatchId) ?? null;
 
   return (
     <AppShell role="farmer">
@@ -71,17 +51,25 @@ export default function FarmerBatches() {
               batch={b}
               onStartHarvest={() => updateStage(b.id, 'awaiting_harvest')}
               onMarkReady={() => updateStage(b.id, 'ready_for_handover')}
-              onToggleProgress={() => setProgressBatchId(progressBatchId === b.id ? null : b.id)}
-              progressOpen={progressBatchId === b.id}
-              onPostProgress={(kind) => postProgress(b.id, kind)}
-              progressQuantity={progressQuantity}
-              onProgressQuantityChange={setProgressQuantity}
-              progressDate={progressDate}
-              onProgressDateChange={setProgressDate}
+              onEdit={() => setEditingBatchId(b.id)}
             />
           ))}
         </div>
       </div>
+
+      <Overlay open={editingBatch !== null} onClose={() => setEditingBatchId(null)}>
+        {editingBatch && (
+          <HarvestBatchForm
+            mode="edit"
+            initialBatch={editingBatch}
+            onCancel={() => setEditingBatchId(null)}
+            onSaved={() => {
+              setEditingBatchId(null);
+              load();
+            }}
+          />
+        )}
+      </Overlay>
     </AppShell>
   );
 }

@@ -44,17 +44,11 @@ export function BatchCard(props: {
   batch: Batch;
   onStartHarvest?: () => void;
   onMarkReady?: () => void;
-  onToggleProgress?: () => void;
-  progressOpen?: boolean;
-  onPostProgress?: (kind: 'on_track' | 'quantity_adjusted' | 'rescheduled') => void;
-  progressQuantity?: number;
-  onProgressQuantityChange?: (n: number) => void;
-  progressDate?: string;
-  onProgressDateChange?: (d: string) => void;
+  onEdit?: () => void;
 }) {
   const { batch } = props;
   const status = batchStatusInfo(batch.status);
-  const hasActions = props.onStartHarvest || props.onMarkReady || props.onToggleProgress;
+  const hasActions = props.onStartHarvest || props.onMarkReady || props.onEdit;
 
   return (
     <Card className={styles.card}>
@@ -69,31 +63,7 @@ export function BatchCard(props: {
           <div className={styles.actions}>
             {props.onStartHarvest && <Button variant="outline" onClick={props.onStartHarvest}>Bắt đầu thu hoạch</Button>}
             {props.onMarkReady && <Button onClick={props.onMarkReady}>Sẵn sàng giao</Button>}
-            {props.onToggleProgress && <Button variant="outline" onClick={props.onToggleProgress}>Cập nhật tiến độ</Button>}
-          </div>
-        )}
-        {props.progressOpen && (
-          <div className={styles.progressPanel}>
-            <Button variant="outline" onClick={() => props.onPostProgress?.('on_track')}>Đúng tiến độ</Button>
-            <div className={styles.field}>
-              <label htmlFor={`newQty-${batch.id}`}>Điều chỉnh sản lượng</label>
-              <input
-                id={`newQty-${batch.id}`}
-                type="number"
-                defaultValue={batch.quantityTotal}
-                onChange={(e) => props.onProgressQuantityChange?.(Number(e.target.value))}
-              />
-              <Button variant="outline" onClick={() => props.onPostProgress?.('quantity_adjusted')}>Lưu sản lượng</Button>
-            </div>
-            <div className={styles.field}>
-              <label htmlFor={`newDate-${batch.id}`}>Dời ngày thu hoạch</label>
-              <input
-                id={`newDate-${batch.id}`}
-                type="date"
-                onChange={(e) => props.onProgressDateChange?.(e.target.value)}
-              />
-              <Button variant="outline" onClick={() => props.onPostProgress?.('rescheduled')}>Lưu ngày mới</Button>
-            </div>
+            {props.onEdit && <Button variant="outline" onClick={props.onEdit}>Chỉnh sửa</Button>}
           </div>
         )}
       </div>
