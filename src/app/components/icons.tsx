@@ -182,6 +182,26 @@ export function BasketIcon({ className }: { className?: string }) {
   );
 }
 
+export function HomeIcon({ className }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <path d="M4 11.5 12 4l8 7.5" />
+      <path d="M6 10v9.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10" />
+      <path d="M10 20.5V15h4v5.5" />
+    </svg>
+  );
+}
+
+export function UserCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg {...baseProps} className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="9.5" r="3" />
+      <path d="M6 18.5c1.2-2.6 3.5-4 6-4s4.8 1.4 6 4" />
+    </svg>
+  );
+}
+
 export function CameraIcon({ className }: { className?: string }) {
   return (
     <svg {...baseProps} className={className}>

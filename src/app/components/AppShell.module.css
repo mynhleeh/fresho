@@ -162,3 +162,13 @@
     padding-bottom: calc(var(--bottomnav-height) + var(--space-4));
   }
 }
+
+@media (max-width: 380px) {
+  .navItem {
+    padding: 0 2px;
+  }
+
+  .navLabel {
+    font-size: 9px;
+  }
+}

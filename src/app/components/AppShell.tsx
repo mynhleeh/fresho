@@ -6,6 +6,7 @@ import type { ComponentType, ReactNode } from 'react';
 import {
   ClipboardOrdersIcon,
   HarvestBatchIcon,
+  HomeIcon,
   LeafIcon,
   LogisticsTruckIcon,
   PlusIcon,
@@ -35,11 +36,14 @@ const NAV_ICON_BY_HREF: Record<string, ComponentType<{ className?: string }>> = 
   '/logistics/deliveries': LogisticsTruckIcon,
 };
 
+const HOME_NAV_ITEM: NavItem = { href: '/dashboard', label: 'Trang chủ', Icon: HomeIcon };
+
 function navItemsForRole(role: Role): NavItem[] {
-  return ROLE_NAV_LINKS[role].map((link) => ({
+  const roleItems = ROLE_NAV_LINKS[role].map((link) => ({
     ...link,
     Icon: NAV_ICON_BY_HREF[link.href],
   }));
+  return [HOME_NAV_ITEM, ...roleItems];
 }
 
 type PrimaryAction =
