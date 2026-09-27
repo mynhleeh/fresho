@@ -16,12 +16,31 @@ model User {
   trustScore Int      @default(0) @map("trust_score")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  batches           HarvestBatch[]
-  preOrders         PreOrder[]
+  batches            HarvestBatch[]
+  preOrders          PreOrder[]
   assignedDeliveries DeliveryRecord[] @relation("LogisticsPartner")
-  raisedDisputes    DisputeLog[]
+  raisedDisputes     DisputeLog[]
+  ratingsGiven       Rating[]         @relation("Rater")
+  ratingsReceived    Rating[]         @relation("Ratee")
 
   @@map("users")
+}
+
+model Rating {
+  id               String   @id @default(cuid())
+  preOrderId       String   @map("pre_order_id")
+  preOrder         PreOrder @relation(fields: [preOrderId], references: [id])
+  raterId          String   @map("rater_id")
+  rater            User     @relation("Rater", fields: [raterId], references: [id])
+  rateeId          String   @map("ratee_id")
+  ratee            User     @relation("Ratee", fields: [rateeId], references: [id])
+  qualityScore     Int      @map("quality_score")
+  timelinessScore  Int      @map("timeliness_score")
+  commitmentScore  Int      @map("commitment_score")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@unique([preOrderId, raterId])
+  @@map("ratings")
 }
 
 model HarvestBatch {
@@ -78,6 +97,7 @@ model PreOrder {
   delivery      DeliveryRecord?
   disputes      DisputeLog[]
   messages      OrderMessage[]
+  ratings       Rating[]
 
   @@map("pre_orders")
 }

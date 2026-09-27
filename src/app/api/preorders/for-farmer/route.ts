@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
     const preOrders = await prisma.preOrder.findMany({
       where: { batch: { farmerId: user.id } },
-      include: { batch: true, buyer: true, deposits: true },
+      include: { batch: true, buyer: true, deposits: true, ratings: true },
       orderBy: { createdAt: 'desc' },
     });
     return Response.json(preOrders);
