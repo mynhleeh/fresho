@@ -16,6 +16,7 @@ export async function cleanupDb() {
   await prisma.preOrder.deleteMany();
   await prisma.shippingQuote.deleteMany();
   await prisma.harvestProgressUpdate.deleteMany();
+  await prisma.harvestBatchPhoto.deleteMany();
   await prisma.harvestBatch.deleteMany();
   await prisma.user.deleteMany();
 }

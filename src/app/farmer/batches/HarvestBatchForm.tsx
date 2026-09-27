@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react';
 import { Button } from '../../components/Button';
 import { formatVnd } from '../../components/MoneySummaryRow';
 import { SparkleIcon } from '../../components/icons';
+import { batchStatusInfo } from '@/lib/orderStatus';
 import { BatchCard, type Batch } from './BatchCard';
-import { PhotoUploadField } from './PhotoUploadField';
+import { BatchPhotoGallery, type GalleryPhoto } from './BatchPhotoGallery';
 import styles from './HarvestBatchForm.module.css';
 
 export type EditableBatch = Batch & {
@@ -25,7 +26,14 @@ type FormState = {
   qualityStandard: string;
   minOrderQuantity: number;
   description: string;
+  status: string;
 };
+
+const FARMER_SELECTABLE_STATUSES = [
+  { value: 'open', label: 'Đang mở đặt trước' },
+  { value: 'ready_for_handover', label: 'Sẵn sàng bàn giao' },
+  { value: 'closed', label: 'Kết thúc mùa vụ' },
+];
 
 function formStateFromBatch(batch?: EditableBatch): FormState {
   return {
@@ -38,7 +46,22 @@ function formStateFromBatch(batch?: EditableBatch): FormState {
     qualityStandard: batch?.qualityStandard ?? '',
     minOrderQuantity: batch?.minOrderQuantity ?? 1,
     description: batch?.description ?? '',
+    status: batch?.status ?? 'open',
   };
+}
+
+// A photo not yet uploaded (create mode, batch doesn't exist yet) vs one already
+// persisted server-side (edit mode, or after upload during create).
+type PendingPhoto = { key: string; kind: 'pending'; file: File; url: string; isCover: boolean };
+type PersistedPhoto = { key: string; kind: 'persisted'; id: string; url: string; isCover: boolean };
+type FormPhoto = PendingPhoto | PersistedPhoto;
+
+function toGalleryPhotos(photos: FormPhoto[]): GalleryPhoto[] {
+  return photos.map((p) => ({ key: p.key, url: p.url, isCover: p.isCover }));
+}
+
+function promoteFirstAsCover(photos: FormPhoto[]): FormPhoto[] {
+  return photos.map((p, index) => ({ ...p, isCover: index === 0 }));
 }
 
 export function HarvestBatchForm(props: {
@@ -50,12 +73,26 @@ export function HarvestBatchForm(props: {
   const { mode, initialBatch } = props;
   const [tab, setTab] = useState<'info' | 'preview'>('info');
   const [form, setForm] = useState<FormState>(() => formStateFromBatch(initialBatch));
-  const [photo, setPhoto] = useState<File | null>(null);
+  const [photos, setPhotos] = useState<FormPhoto[]>([]);
   const [advisory, setAdvisory] = useState<{
     suggestedMinPrice: number | null;
     suggestedMaxPrice: number | null;
     packagingSuggestion: string;
   } | null>(null);
+
+  useEffect(() => {
+    if (mode !== 'edit' || !initialBatch) return;
+    let cancelled = false;
+    (async () => {
+      const res = await fetch(`/api/batches/${initialBatch.id}/photos`);
+      if (!res.ok || cancelled) return;
+      const loaded: { id: string; url: string; isCover: boolean }[] = await res.json();
+      setPhotos(loaded.map((p) => ({ key: p.id, kind: 'persisted', id: p.id, url: p.url, isCover: p.isCover })));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, initialBatch]);
 
   useEffect(() => {
     const cropName = form.cropName.trim();
@@ -70,6 +107,78 @@ export function HarvestBatchForm(props: {
     return () => clearTimeout(timeout);
   }, [form.cropName]);
 
+  function addPendingPhoto(file: File) {
+    setPhotos((current) => [
+      ...current,
+      { key: `pending-${crypto.randomUUID()}`, kind: 'pending', file, url: URL.createObjectURL(file), isCover: current.length === 0 },
+    ]);
+  }
+
+  async function addPersistedPhoto(batchId: string, file: File) {
+    const body = new FormData();
+    body.set('photo', file);
+    const res = await fetch(`/api/batches/${batchId}/photos`, { method: 'POST', body });
+    if (!res.ok) {
+      const error = await res.json();
+      alert(error.message ?? error.code);
+      return;
+    }
+    const photo: { id: string; url: string; isCover: boolean } = await res.json();
+    setPhotos((current) => [...current, { key: photo.id, kind: 'persisted', id: photo.id, url: photo.url, isCover: photo.isCover }]);
+  }
+
+  function removePendingPhoto(key: string) {
+    setPhotos((current) => {
+      const removedWasCover = current.find((p) => p.key === key)?.isCover ?? false;
+      const remaining = current.filter((p) => p.key !== key);
+      return removedWasCover ? promoteFirstAsCover(remaining) : remaining;
+    });
+  }
+
+  async function removePersistedPhoto(batchId: string, photoId: string) {
+    const res = await fetch(`/api/batches/${batchId}/photos/${photoId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const error = await res.json();
+      alert(error.message ?? error.code);
+      return;
+    }
+    const refreshed = await fetch(`/api/batches/${batchId}/photos`);
+    const loaded: { id: string; url: string; isCover: boolean }[] = await refreshed.json();
+    setPhotos(loaded.map((p) => ({ key: p.id, kind: 'persisted', id: p.id, url: p.url, isCover: p.isCover })));
+  }
+
+  function setCoverPending(key: string) {
+    setPhotos((current) => current.map((p) => ({ ...p, isCover: p.key === key })));
+  }
+
+  async function setCoverPersisted(batchId: string, photoId: string) {
+    const res = await fetch(`/api/batches/${batchId}/photos/${photoId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isCover: true }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      alert(error.message ?? error.code);
+      return;
+    }
+    setPhotos((current) => current.map((p) => ({ ...p, isCover: p.kind === 'persisted' && p.id === photoId })));
+  }
+
+  async function uploadPendingPhotosAfterCreate(batchId: string) {
+    const pending = photos.filter((p): p is PendingPhoto => p.kind === 'pending');
+    const ordered = [...pending].sort((a, b) => Number(b.isCover) - Number(a.isCover));
+    for (const photo of ordered) {
+      const body = new FormData();
+      body.set('photo', photo.file);
+      const res = await fetch(`/api/batches/${batchId}/photos`, { method: 'POST', body });
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.message ?? error.code);
+      }
+    }
+  }
+
   async function submitCreate() {
     const res = await fetch('/api/batches', {
       method: 'POST',
@@ -83,15 +192,7 @@ export function HarvestBatchForm(props: {
     }
     const batch = await res.json();
 
-    if (photo) {
-      const photoForm = new FormData();
-      photoForm.set('photo', photo);
-      const photoRes = await fetch(`/api/batches/${batch.id}/photo`, { method: 'POST', body: photoForm });
-      if (!photoRes.ok) {
-        const error = await photoRes.json();
-        alert(error.message ?? error.code);
-      }
-    }
+    await uploadPendingPhotosAfterCreate(batch.id);
 
     props.onSaved();
   }
@@ -145,22 +246,13 @@ export function HarvestBatchForm(props: {
         qualityStandard: form.qualityStandard,
         minOrderQuantity: form.minOrderQuantity,
         description: form.description,
+        status: form.status,
       }),
     });
     if (!patchRes.ok) {
       const error = await patchRes.json();
       alert(error.message ?? error.code);
       return;
-    }
-
-    if (photo) {
-      const photoForm = new FormData();
-      photoForm.set('photo', photo);
-      const photoRes = await fetch(`/api/batches/${batchId}/photo`, { method: 'POST', body: photoForm });
-      if (!photoRes.ok) {
-        const error = await photoRes.json();
-        alert(error.message ?? error.code);
-      }
     }
 
     props.onSaved();
@@ -175,6 +267,8 @@ export function HarvestBatchForm(props: {
     else await submitEdit();
   }
 
+  const coverPhotoUrl = photos.find((p) => p.isCover)?.url ?? initialBatch?.photoUrl ?? null;
+
   const previewBatch: Batch = {
     id: initialBatch?.id ?? 'preview',
     cropName: form.cropName,
@@ -182,8 +276,8 @@ export function HarvestBatchForm(props: {
     quantityAvailable: initialBatch?.quantityAvailable ?? form.quantityTotal,
     unit: form.unit,
     pricePerUnit: form.pricePerUnit,
-    status: initialBatch?.status ?? 'open',
-    photoUrl: initialBatch?.photoUrl ?? null,
+    status: form.status,
+    photoUrl: coverPhotoUrl,
   };
 
   return (
@@ -250,6 +344,25 @@ export function HarvestBatchForm(props: {
               <label htmlFor="location">Địa điểm</label>
               <input id="location" placeholder="Châu Thành, Tiền Giang" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} required />
             </div>
+            {mode === 'edit' && (
+              <div className={styles.field}>
+                <label htmlFor="status">Trạng thái mùa vụ</label>
+                <select
+                  id="status"
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                >
+                  {!FARMER_SELECTABLE_STATUSES.some((option) => option.value === initialBatch?.status) && initialBatch && (
+                    // TODO(business-confirm): awaiting_harvest is a system-set stage (deliveryService),
+                    // shown read-only here since farmers don't pick it manually from this dropdown.
+                    <option value={initialBatch.status} disabled>{batchStatusInfo(initialBatch.status).label}</option>
+                  )}
+                  {FARMER_SELECTABLE_STATUSES.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className={styles.field}>
               <label htmlFor="qualityStandard">Tiêu chuẩn sản phẩm</label>
               <input id="qualityStandard" placeholder="VietGAP, loại 1" value={form.qualityStandard} onChange={(e) => setForm({ ...form, qualityStandard: e.target.value })} />
@@ -261,12 +374,24 @@ export function HarvestBatchForm(props: {
                 <span className={styles.suffix}>{form.unit}</span>
               </div>
             </div>
-            <div className={styles.field}>
-              <label htmlFor="photo">Ảnh mùa vụ (không bắt buộc)</label>
-              <PhotoUploadField
-                id="photo"
-                existingPhotoUrl={initialBatch?.photoUrl ?? null}
-                onSelect={setPhoto}
+            <div className={styles.fieldWide}>
+              <label htmlFor="photos">Ảnh mùa vụ (không bắt buộc)</label>
+              <BatchPhotoGallery
+                id="photos"
+                photos={toGalleryPhotos(photos)}
+                onAdd={(file) => (initialBatch ? addPersistedPhoto(initialBatch.id, file) : addPendingPhoto(file))}
+                onRemove={(key) => {
+                  const photo = photos.find((p) => p.key === key);
+                  if (!photo) return;
+                  if (photo.kind === 'persisted' && initialBatch) removePersistedPhoto(initialBatch.id, photo.id);
+                  else removePendingPhoto(key);
+                }}
+                onSetCover={(key) => {
+                  const photo = photos.find((p) => p.key === key);
+                  if (!photo) return;
+                  if (photo.kind === 'persisted' && initialBatch) setCoverPersisted(initialBatch.id, photo.id);
+                  else setCoverPending(key);
+                }}
               />
             </div>
             <div className={styles.fieldWide}>
