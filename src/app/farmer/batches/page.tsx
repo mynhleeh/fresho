@@ -13,7 +13,7 @@ export default function FarmerBatches() {
   const [progressDate, setProgressDate] = useState('');
 
   async function load() {
-    const res = await fetch('/api/batches');
+    const res = await fetch('/api/batches?mine=1');
     setBatches(await res.json());
   }
 

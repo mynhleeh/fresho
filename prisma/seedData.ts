@@ -27,6 +27,7 @@ export type DemoHarvestBatch = {
   location: string;
   qualityStandard?: string;
   minOrderQuantity?: number;
+  preOrderStatus?: string;
 };
 
 // Diverse harvest_batch demo rows exercising every farmer batch-card state
@@ -35,9 +36,9 @@ export const DEMO_HARVEST_BATCHES: DemoHarvestBatch[] = [
   { cropName: 'Xoài cát Hòa Lộc', quantityTotal: 500, quantityAvailable: 500, unit: 'kg', pricePerUnit: 35000, harvestDateOffsetDays: 10, status: 'open', photoUrl: '/uploads/batches/seed-mango.jpg', location: 'Cai Lay, Tien Giang', qualityStandard: 'VietGAP' },
   { cropName: 'Dưa leo loại 1', quantityTotal: 800, quantityAvailable: 800, unit: 'kg', pricePerUnit: 9000, harvestDateOffsetDays: 7, status: 'open', photoUrl: null, location: 'Cu Chi, HCMC' },
   { cropName: 'Cà chua bi', quantityTotal: 300, quantityAvailable: 300, unit: 'kg', pricePerUnit: 22000, harvestDateOffsetDays: 2, status: 'open', photoUrl: null, location: 'Da Lat, Lam Dong' },
-  { cropName: 'Rau muống', quantityTotal: 400, quantityAvailable: 0, unit: 'kg', pricePerUnit: 8000, harvestDateOffsetDays: 5, status: 'open', photoUrl: null, location: 'Hoc Mon, HCMC' },
-  { cropName: 'Lúa ST25', quantityTotal: 2000, quantityAvailable: 1200, unit: 'kg', pricePerUnit: 15000, harvestDateOffsetDays: 3, status: 'awaiting_harvest', photoUrl: null, location: 'Soc Trang' },
-  { cropName: 'Bưởi da xanh', quantityTotal: 600, quantityAvailable: 200, unit: 'kg', pricePerUnit: 28000, harvestDateOffsetDays: 1, status: 'ready_for_handover', photoUrl: null, location: 'Ben Tre' },
+  { cropName: 'Rau muống', quantityTotal: 400, quantityAvailable: 0, unit: 'kg', pricePerUnit: 8000, harvestDateOffsetDays: 5, status: 'open', photoUrl: null, location: 'Hoc Mon, HCMC', preOrderStatus: 'deposited' },
+  { cropName: 'Lúa ST25', quantityTotal: 2000, quantityAvailable: 1200, unit: 'kg', pricePerUnit: 15000, harvestDateOffsetDays: 3, status: 'awaiting_harvest', photoUrl: null, location: 'Soc Trang', preOrderStatus: 'awaiting_harvest' },
+  { cropName: 'Bưởi da xanh', quantityTotal: 600, quantityAvailable: 200, unit: 'kg', pricePerUnit: 28000, harvestDateOffsetDays: 1, status: 'ready_for_handover', photoUrl: null, location: 'Ben Tre', preOrderStatus: 'ready_for_handover' },
   { cropName: 'Ổi Đài Loan', quantityTotal: 50, quantityAvailable: 50, unit: 'thùng', pricePerUnit: 180000, harvestDateOffsetDays: 8, status: 'open', photoUrl: null, location: 'Long An' },
   { cropName: 'Khoai lang tím', quantityTotal: 1000, quantityAvailable: 950, unit: 'kg', pricePerUnit: 6000, harvestDateOffsetDays: 12, status: 'open', photoUrl: null, location: 'Vinh Long', minOrderQuantity: 50 },
 ];

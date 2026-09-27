@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { prisma } from '@/lib/db';
-import { listOpenBatches, createBatch, setBatchPhoto } from '@/lib/services/batchService';
+import { listOpenBatches, listBatchesByFarmer, createBatch, setBatchPhoto } from '@/lib/services/batchService';
 import { ApiError } from '@/lib/errors';
 import { cleanupDb } from '../helpers/cleanup';
 
@@ -114,6 +114,40 @@ describe('listOpenBatches', () => {
 
     expect(result[0].farmerId).toBe(highTrust.id);
     expect(result[1].farmerId).toBe(lowTrust.id);
+  });
+});
+
+describe('listBatchesByFarmer', () => {
+  beforeEach(async () => {
+    await cleanupDb();
+  });
+
+  it('returns all of a farmer\'s batches regardless of status, excluding other farmers\' batches', async () => {
+    const farmer = await prisma.user.create({
+      data: { name: 'F', phone: '9', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    const otherFarmer = await prisma.user.create({
+      data: { name: 'Other', phone: '10', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    const openBatch = await createBatch(farmer.id, {
+      cropName: 'Xoai', quantityTotal: 100, unit: 'kg', pricePerUnit: 15000,
+      harvestDateEstimate: new Date(), location: 'Da Lat',
+    });
+    const awaitingBatch = await createBatch(farmer.id, {
+      cropName: 'Lua', quantityTotal: 200, unit: 'kg', pricePerUnit: 10000,
+      harvestDateEstimate: new Date(), location: 'Soc Trang',
+    });
+    await prisma.harvestBatch.update({ where: { id: awaitingBatch.id }, data: { status: 'awaiting_harvest' } });
+    await createBatch(otherFarmer.id, {
+      cropName: 'Buoi', quantityTotal: 50, unit: 'kg', pricePerUnit: 20000,
+      harvestDateEstimate: new Date(), location: 'Ben Tre',
+    });
+
+    const result = await listBatchesByFarmer(farmer.id);
+
+    expect(result).toHaveLength(2);
+    expect(result.map((b) => b.id).sort()).toEqual([openBatch.id, awaitingBatch.id].sort());
+    expect(result.every((b) => b.farmerId === farmer.id)).toBe(true);
   });
 });
 

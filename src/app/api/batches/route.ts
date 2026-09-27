@@ -1,10 +1,18 @@
 import { getCurrentUser } from '@/lib/session';
-import { createBatch, listOpenBatches } from '@/lib/services/batchService';
+import { createBatch, listBatchesByFarmer, listOpenBatches } from '@/lib/services/batchService';
 import { ApiError, errorResponse } from '@/lib/errors';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+
+    if (searchParams.get('mine') === '1') {
+      const user = await getCurrentUser(request);
+      if (!user || user.role !== 'farmer') throw new ApiError('forbidden', 'Only farmers can list their own batches', 403);
+      const batches = await listBatchesByFarmer(user.id);
+      return Response.json(batches);
+    }
+
     const harvestDateFrom = searchParams.get('harvestDateFrom');
     const harvestDateTo = searchParams.get('harvestDateTo');
     const sortBy = searchParams.get('sortBy');

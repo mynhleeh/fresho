@@ -2,14 +2,6 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { DEMO_ACCOUNTS, DEMO_HARVEST_BATCHES } from './seedData';
 
-// index-aligned with DEMO_HARVEST_BATCHES: batches whose status implies at least
-// one pre_order reached "deposited" (00-project-charter.rule.md §4) get one here.
-const PRE_ORDER_STATUS_BY_BATCH_INDEX: Record<number, string> = {
-  3: 'deposited', // "Rau muống" — fully booked (quantityAvailable: 0)
-  4: 'deposited', // "Lúa ST25" — awaiting_harvest implies a deposited pre_order exists
-  5: 'deposited', // "Bưởi da xanh" — ready_for_handover implies the same
-};
-
 const prisma = new PrismaClient();
 
 function demoPasswordHashForPhone(phone: string): string {
@@ -40,7 +32,7 @@ async function main() {
   const buyer = createdUsers.find((user) => user.role === 'buyer');
   if (!buyer) throw new Error('DEMO_ACCOUNTS must include a buyer account');
 
-  for (const [index, batch] of DEMO_HARVEST_BATCHES.entries()) {
+  for (const batch of DEMO_HARVEST_BATCHES) {
     const createdBatch = await prisma.harvestBatch.create({
       data: {
         farmerId: farmer.id,
@@ -58,20 +50,32 @@ async function main() {
       },
     });
 
-    const preOrderStatus = PRE_ORDER_STATUS_BY_BATCH_INDEX[index];
-    if (preOrderStatus) {
-      // reserved quantity = whatever the batch already "used up" (quantityTotal - quantityAvailable)
+    if (batch.preOrderStatus) {
       // TODO(business-confirm): seed pre_order quantities/prices below are illustrative demo values only.
       const reservedQuantity = (batch.quantityTotal - batch.quantityAvailable) || (batch.minOrderQuantity ?? 1);
-      await prisma.preOrder.create({
+      const preOrder = await prisma.preOrder.create({
         data: {
           batchId: createdBatch.id,
           buyerId: buyer.id,
           quantity: reservedQuantity,
           pricePerUnit: batch.pricePerUnit,
-          status: preOrderStatus,
+          status: batch.preOrderStatus,
         },
       });
+
+      const depositAmount = Math.round(reservedQuantity * batch.pricePerUnit * 0.2);
+      await prisma.deposit.create({
+        data: { preOrderId: preOrder.id, amount: depositAmount },
+      });
+      await prisma.ledgerEntry.create({
+        data: { preOrderId: preOrder.id, type: 'deposit', amount: depositAmount, note: 'Deposit paid' },
+      });
+
+      if (batch.preOrderStatus === 'ready_for_handover') {
+        await prisma.deliveryRecord.create({
+          data: { preOrderId: preOrder.id, method: 'self_pickup', status: 'ready_for_handover' },
+        });
+      }
     }
   }
 

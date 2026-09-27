@@ -69,6 +69,13 @@ export async function listOpenBatches(filter?: {
   });
 }
 
+export async function listBatchesByFarmer(farmerId: string) {
+  return prisma.harvestBatch.findMany({
+    where: { farmerId },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export async function updateBatch(
   batchId: string,
   farmerId: string,
