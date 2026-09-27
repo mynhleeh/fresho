@@ -60,6 +60,7 @@ model HarvestBatch {
   location             String      @default("")
   qualityStandard      String?     @map("quality_standard")
   minOrderQuantity     Int         @default(1) @map("min_order_quantity")
+  description          String?     @map("description")
   createdAt            DateTime    @default(now()) @map("created_at")
 
   preOrders        PreOrder[]
