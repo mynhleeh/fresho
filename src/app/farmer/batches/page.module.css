@@ -113,3 +113,17 @@
   gap: var(--space-2);
   flex-wrap: wrap;
 }
+
+.progressPanel {
+  flex-basis: 100%;
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.progressPanel .field {
+  margin-bottom: 0;
+}

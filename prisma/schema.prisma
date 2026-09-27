@@ -38,9 +38,24 @@ model HarvestBatch {
   photoUrl             String?     @map("photo_url")
   createdAt            DateTime    @default(now()) @map("created_at")
 
-  preOrders PreOrder[]
+  preOrders        PreOrder[]
+  progressUpdates  HarvestProgressUpdate[]
 
   @@map("harvest_batches")
+}
+
+model HarvestProgressUpdate {
+  id            String       @id @default(cuid())
+  batchId       String       @map("batch_id")
+  batch         HarvestBatch @relation(fields: [batchId], references: [id])
+  farmerId      String       @map("farmer_id")
+  kind          String
+  note          String?
+  previousValue String?      @map("previous_value")
+  newValue      String?      @map("new_value")
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  @@map("harvest_progress_updates")
 }
 
 model PreOrder {
