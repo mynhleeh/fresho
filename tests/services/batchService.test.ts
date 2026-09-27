@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { prisma } from '@/lib/db';
-import { listOpenBatches, createBatch } from '@/lib/services/batchService';
+import { listOpenBatches, createBatch, setBatchPhoto } from '@/lib/services/batchService';
+import { ApiError } from '@/lib/errors';
 import { cleanupDb } from '../helpers/cleanup';
 
 describe('createBatch', () => {
@@ -113,5 +114,40 @@ describe('listOpenBatches', () => {
 
     expect(result[0].farmerId).toBe(highTrust.id);
     expect(result[1].farmerId).toBe(lowTrust.id);
+  });
+});
+
+describe('setBatchPhoto', () => {
+  beforeEach(async () => {
+    await cleanupDb();
+  });
+
+  it('updates photoUrl when the caller owns the batch', async () => {
+    const farmer = await prisma.user.create({
+      data: { name: 'F', phone: '6', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    const batch = await createBatch(farmer.id, {
+      cropName: 'Xoai cat', quantityTotal: 100, unit: 'kg', pricePerUnit: 20000,
+      harvestDateEstimate: new Date(), location: 'Tien Giang',
+    });
+
+    const updated = await setBatchPhoto(batch.id, farmer.id, '/uploads/batches/x.jpg');
+
+    expect(updated.photoUrl).toBe('/uploads/batches/x.jpg');
+  });
+
+  it('rejects when the caller does not own the batch', async () => {
+    const owner = await prisma.user.create({
+      data: { name: 'Owner', phone: '7', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    const otherFarmer = await prisma.user.create({
+      data: { name: 'Other', phone: '8', address: 'A', role: 'farmer', passwordHash: 'x' },
+    });
+    const batch = await createBatch(owner.id, {
+      cropName: 'Xoai cat', quantityTotal: 100, unit: 'kg', pricePerUnit: 20000,
+      harvestDateEstimate: new Date(), location: 'Tien Giang',
+    });
+
+    await expect(setBatchPhoto(batch.id, otherFarmer.id, '/uploads/batches/x.jpg')).rejects.toThrow(ApiError);
   });
 });
