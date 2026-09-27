@@ -9,7 +9,7 @@
   --land-muted: #54594c;
   --land-line: #e4dcc4;
   --land-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --land-display: var(--font-landing-display), Georgia, 'Times New Roman', serif;
+  --land-display: var(--font-display), Georgia, 'Times New Roman', serif;
 
   width: 100%;
   min-height: 100vh;

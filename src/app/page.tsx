@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { landingDisplayFont } from './landing/fonts';
+import { displayFont } from './components/displayFont';
 import { LandingNav } from './landing/LandingNav';
 import { HeroScene } from './landing/HeroScene';
 import { AudienceSection, ProcessSection, ProduceMarquee } from './landing/LandingSections';
@@ -9,7 +9,7 @@ import styles from './landing/landing.module.css';
 
 export default function LandingPage() {
   return (
-    <div className={`${styles.page} ${landingDisplayFont.variable}`} data-reveal-root>
+    <div className={`${styles.page} ${displayFont.variable}`} data-reveal-root>
       <LandingNav />
       <main>
         <section className={styles.hero}>
