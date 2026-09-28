@@ -3,6 +3,7 @@
   flex-direction: column;
   overflow: hidden;
   padding: 0;
+  transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
 }
 .thumbnailFrame {
   position: relative;
@@ -29,35 +30,118 @@
 .dimmed {
   filter: blur(3px) opacity(0.55);
 }
+.thumbnailScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, var(--color-scrim) 100%);
+  pointer-events: none;
+}
 .statusStrip {
   position: absolute;
-  left: var(--space-2);
-  bottom: var(--space-2);
+  left: var(--space-3);
+  bottom: var(--space-3);
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
   max-width: calc(100% - var(--space-4));
-  box-shadow: var(--shadow-soft);
 }
 .body {
   padding: var(--space-4);
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  row-gap: var(--space-3);
+}
+.titleRow {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  justify-content: space-between;
   gap: var(--space-2);
+  min-height: var(--space-6);
 }
 .name {
+  font-family: var(--font-family-display);
   font-weight: 600;
   font-size: var(--font-size-lg);
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.meta {
-  color: var(--color-text-muted);
+.price {
+  font-weight: 800;
+  color: var(--color-primary);
   font-size: var(--font-size-md);
+  white-space: nowrap;
+}
+.priceUnit {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}
+.progressRemaining {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-cream-shade);
+}
+.progressFill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--color-leaf-bright), var(--color-accent-gold));
+  transform-origin: left center;
+  transform: scaleX(var(--booked-ratio));
+  animation: batch-progress-fill 0.7s var(--ease-standard) both;
+}
+.timelineSlot {
+  display: flex;
+  align-items: center;
+  min-height: var(--space-5);
+}
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+.timelineDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+}
+.timelineDotActive {
+  background: var(--color-leaf-bright);
+}
+.timelineLabel {
+  margin-left: var(--space-1);
+  font-weight: 700;
+  color: var(--color-ink-soft);
 }
 .actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--space-2);
-  margin-top: var(--space-2);
+  min-height: var(--touch-target-min);
 }
 .skeletonCard {
   pointer-events: none;
@@ -68,7 +152,38 @@
   background: var(--color-border);
 }
 .skeletonLine {
+  display: block;
   height: 14px;
   border-radius: var(--radius-sm);
   background: var(--color-border);
+}
+.skeletonTrack {
+  display: block;
+  height: 8px;
+  margin-top: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+  }
+}
+
+@keyframes batch-progress-fill {
+  from { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  .card:hover {
+    transform: none;
+  }
+  .progressFill {
+    animation: none;
+  }
 }

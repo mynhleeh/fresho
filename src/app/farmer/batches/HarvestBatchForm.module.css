@@ -64,6 +64,19 @@
   gap: var(--space-3);
 }
 
+.previewPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -178,8 +191,119 @@
   flex-shrink: 0;
 }
 
+.fieldCard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  margin-bottom: var(--space-4);
+  overflow: hidden;
+}
+
+.fieldCardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-mint);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fieldCardIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  flex: none;
+}
+
+.fieldCardIconGlyph {
+  width: 18px;
+  height: 18px;
+  color: var(--color-primary);
+}
+
+.fieldCardTitle {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.fieldCardBody {
+  padding: var(--space-4);
+}
+
+.valuePreview {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-gold-cream);
+}
+
+.valuePreviewLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-gold-text);
+}
+
+.valuePreviewAmount {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-gold-deep);
+}
+
+.countdownStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  margin-top: var(--space-3);
+}
+
+.countdownTick,
+.countdownTickActive {
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  transform-origin: bottom;
+  animation: countdown-tick-in 0.5s var(--ease-standard) both;
+}
+
+.countdownTick {
+  background: var(--color-border-strong);
+}
+
+.countdownTickActive {
+  background: var(--color-leaf-bright);
+}
+
+.countdownLabel {
+  margin-left: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-ink-soft);
+}
+
+@keyframes countdown-tick-in {
+  from { transform: scaleY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .countdownTick,
+  .countdownTickActive {
+    animation: none;
+  }
+}
+
 .formError {
-  margin: 0 var(--space-4);
+  margin: var(--space-3) var(--space-5) 0;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
   background: var(--color-danger-bg);

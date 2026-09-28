@@ -1,15 +1,61 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '../../components/ui/Button';
 import { formatVnd } from '../../components/order/MoneySummaryRow';
-import { SparkleIcon } from '../../components/ui/icons';
+import { CameraIcon, ClipboardOrdersIcon, HarvestBatchIcon, LeafIcon, SparkleIcon } from '../../components/ui/icons';
 import { batchStatusInfo } from '@/lib/order/orderStatus';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
 import { NETWORK_ERROR_MESSAGE, readApiErrorMessage } from '@/lib/apiErrorMessage';
-import { BatchCard, type Batch } from './BatchCard';
+import { useAuth } from '../../auth/AuthContext';
+import { BuyerBatchCard, type BatchSummary } from '../../buyer/marketplace/BuyerBatchCard';
+import buyerCardStyles from '../../buyer/marketplace/BuyerBatchCard.module.css';
+import { type Batch } from './BatchCard';
 import { BatchPhotoGallery, type GalleryPhoto } from './BatchPhotoGallery';
 import styles from './HarvestBatchForm.module.css';
+
+function noop() {}
+
+function PreviewNeighborCard() {
+  return (
+    <div className={buyerCardStyles.skeletonCard} aria-hidden="true">
+      <div className={buyerCardStyles.skeletonMedia} />
+      <div className={buyerCardStyles.skeletonLine} />
+      <div className={buyerCardStyles.skeletonLineShort} />
+    </div>
+  );
+}
+
+function HarvestCountdownStrip({ harvestDateEstimate }: { harvestDateEstimate: string }) {
+  const [daysLeft, setDaysLeft] = useState<number | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDaysLeft(Math.ceil((new Date(harvestDateEstimate).getTime() - Date.now()) / 86400000));
+  }, [harvestDateEstimate]);
+  if (daysLeft === null) return null;
+  return (
+    <div className={styles.countdownStrip}>
+      {Array.from({ length: 14 }, (_, index) => index + 1).map((day) => (
+        <span key={day} className={day <= daysLeft ? styles.countdownTickActive : styles.countdownTick} />
+      ))}
+      <span className={styles.countdownLabel}>
+        {daysLeft > 0 ? `Còn ${daysLeft} ngày tới ngày thu hoạch dự kiến` : 'Đã tới hoặc quá ngày thu hoạch dự kiến'}
+      </span>
+    </div>
+  );
+}
+
+function FormFieldCard({ icon: Icon, title, children }: { icon: typeof CameraIcon; title: string; children: ReactNode }) {
+  return (
+    <section className={styles.fieldCard}>
+      <div className={styles.fieldCardHeader}>
+        <span className={styles.fieldCardIcon}><Icon className={styles.fieldCardIconGlyph} /></span>
+        <span className={styles.fieldCardTitle}>{title}</span>
+      </div>
+      <div className={styles.fieldCardBody}>{children}</div>
+    </section>
+  );
+}
 
 export type EditableBatch = Batch & {
   harvestDateEstimate: string;
@@ -289,16 +335,20 @@ export function HarvestBatchForm(props: {
   }
 
   const coverPhotoUrl = photos.find((p) => p.isCover)?.url ?? initialBatch?.photoUrl ?? null;
+  const estimatedTotalValue = useMemo(() => form.quantityTotal * form.pricePerUnit, [form.quantityTotal, form.pricePerUnit]);
+  const { user } = useAuth();
 
-  const previewBatch: Batch = {
+  const previewBuyerBatch: BatchSummary = {
     id: initialBatch?.id ?? 'preview',
-    cropName: form.cropName,
+    cropName: form.cropName || 'Chưa đặt tên',
     quantityTotal: form.quantityTotal,
     quantityAvailable: initialBatch?.quantityAvailable ?? form.quantityTotal,
     unit: form.unit,
     pricePerUnit: form.pricePerUnit,
-    status: form.status,
+    location: form.location,
+    harvestDateEstimate: form.harvestDateEstimate,
     photoUrl: coverPhotoUrl,
+    farmer: { name: user?.name ?? 'Bạn', avatarUrl: null, trustScore: 0 },
   };
 
   return (
@@ -309,14 +359,27 @@ export function HarvestBatchForm(props: {
         </div>
       </div>
 
+      {formError && <p role="alert" className={styles.formError}>{formError}</p>}
+
       <div className={styles.stackedBody}>
       <div className={styles.previewSection}>
         <div className={styles.previewColumnLabel}>Xem trước cho người mua</div>
         <div className={styles.previewGrid}>
-          <BatchCard batch={previewBatch} />
-          {SIMULATED_BUYER_GRID_NEIGHBORS.map((key) => (
-            <BatchCard key={key} batch={previewBatch} isEditFocusElsewhere />
-          ))}
+          {form.harvestDateEstimate ? (
+            <BuyerBatchCard
+              batch={previewBuyerBatch}
+              isSaved={false}
+              isCompared={false}
+              isFeatured={false}
+              isEager
+              onToggleSave={noop}
+              onToggleCompare={noop}
+              onMessage={noop}
+            />
+          ) : (
+            <p className={styles.previewPlaceholder}>Chọn ngày thu hoạch dự kiến để xem trước thẻ người mua.</p>
+          )}
+          {SIMULATED_BUYER_GRID_NEIGHBORS.map((key) => <PreviewNeighborCard key={key} />)}
         </div>
       </div>
 
@@ -325,7 +388,8 @@ export function HarvestBatchForm(props: {
         onSubmit={submit}
         className={styles.formColumn}
       >
-        <div className={styles.grid}>
+        <FormFieldCard icon={HarvestBatchIcon} title="Nông sản & sản lượng">
+          <div className={styles.grid}>
             <div className={styles.field}>
               <label htmlFor="cropName">Tên nông sản</label>
               <input id="cropName" placeholder="Dưa leo loại 1" value={form.cropName} onChange={(e) => setForm({ ...form, cropName: e.target.value })} required />
@@ -351,6 +415,26 @@ export function HarvestBatchForm(props: {
               <label htmlFor="pricePerUnit">Giá dự kiến (đồng) / đơn vị</label>
               <input id="pricePerUnit" type="number" placeholder="12000" value={form.pricePerUnit} onChange={(e) => setForm({ ...form, pricePerUnit: Number(e.target.value) })} required />
             </div>
+            <div className={styles.field}>
+              <label htmlFor="qualityStandard">Tiêu chuẩn sản phẩm</label>
+              <input id="qualityStandard" placeholder="VietGAP, loại 1" value={form.qualityStandard} onChange={(e) => setForm({ ...form, qualityStandard: e.target.value })} />
+            </div>
+            <div className={styles.field}>
+              <label htmlFor="minOrderQuantity">Số lượng tối thiểu đặt trước</label>
+              <div className={styles.suffixInput}>
+                <input id="minOrderQuantity" type="number" min={1} value={form.minOrderQuantity} onChange={(e) => setForm({ ...form, minOrderQuantity: Number(e.target.value) })} />
+                <span className={styles.suffix}>{form.unit}</span>
+              </div>
+            </div>
+          </div>
+          <div className={styles.valuePreview}>
+            <span className={styles.valuePreviewLabel}>Ước tính tổng giá trị lô</span>
+            <span className={styles.valuePreviewAmount}>{formatVnd(estimatedTotalValue)}</span>
+          </div>
+        </FormFieldCard>
+
+        <FormFieldCard icon={LeafIcon} title="Thời gian & địa điểm">
+          <div className={styles.grid}>
             <div className={styles.field}>
               <label htmlFor="harvestDateEstimate">Ngày thu hoạch dự kiến</label>
               <input id="harvestDateEstimate" type="date" value={form.harvestDateEstimate} onChange={(e) => setForm({ ...form, harvestDateEstimate: e.target.value })} required />
@@ -383,48 +467,42 @@ export function HarvestBatchForm(props: {
                 </div>
               </div>
             )}
-            <div className={styles.field}>
-              <label htmlFor="qualityStandard">Tiêu chuẩn sản phẩm</label>
-              <input id="qualityStandard" placeholder="VietGAP, loại 1" value={form.qualityStandard} onChange={(e) => setForm({ ...form, qualityStandard: e.target.value })} />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="minOrderQuantity">Số lượng tối thiểu đặt trước</label>
-              <div className={styles.suffixInput}>
-                <input id="minOrderQuantity" type="number" min={1} value={form.minOrderQuantity} onChange={(e) => setForm({ ...form, minOrderQuantity: Number(e.target.value) })} />
-                <span className={styles.suffix}>{form.unit}</span>
-              </div>
-            </div>
-            <div className={styles.fieldWide}>
-              <label htmlFor="photos">Ảnh mùa vụ (không bắt buộc)</label>
-              <BatchPhotoGallery
-                id="photos"
-                photos={toGalleryPhotos(photos)}
-                onAdd={(file) => (initialBatch ? addPersistedPhoto(initialBatch.id, file) : addPendingPhoto(file))}
-                onRemove={(key) => {
-                  const photo = photos.find((p) => p.key === key);
-                  if (!photo) return;
-                  if (photo.kind === 'persisted' && initialBatch) setPhotoToRemove(photo);
-                  else removePendingPhoto(key);
-                }}
-                onSetCover={(key) => {
-                  const photo = photos.find((p) => p.key === key);
-                  if (!photo) return;
-                  if (photo.kind === 'persisted' && initialBatch) setCoverPersisted(initialBatch.id, photo.id);
-                  else setCoverPending(key);
-                }}
-              />
-            </div>
-            <div className={styles.fieldWide}>
-              <label htmlFor="description">Mô tả chi tiết</label>
-              <textarea
-                id="description"
-                rows={4}
-                placeholder="Mô tả cách đóng gói, chất lượng, ghi chú cho người mua..."
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-              />
-            </div>
           </div>
+          {form.harvestDateEstimate && <HarvestCountdownStrip harvestDateEstimate={form.harvestDateEstimate} />}
+        </FormFieldCard>
+
+        <FormFieldCard icon={CameraIcon} title="Ảnh mùa vụ">
+          <BatchPhotoGallery
+            id="photos"
+            photos={toGalleryPhotos(photos)}
+            onAdd={(file) => (initialBatch ? addPersistedPhoto(initialBatch.id, file) : addPendingPhoto(file))}
+            onRemove={(key) => {
+              const photo = photos.find((p) => p.key === key);
+              if (!photo) return;
+              if (photo.kind === 'persisted' && initialBatch) setPhotoToRemove(photo);
+              else removePendingPhoto(key);
+            }}
+            onSetCover={(key) => {
+              const photo = photos.find((p) => p.key === key);
+              if (!photo) return;
+              if (photo.kind === 'persisted' && initialBatch) setCoverPersisted(initialBatch.id, photo.id);
+              else setCoverPending(key);
+            }}
+          />
+        </FormFieldCard>
+
+        <FormFieldCard icon={ClipboardOrdersIcon} title="Ghi chú & đóng gói">
+          <div className={styles.fieldWide}>
+            <label htmlFor="description">Mô tả chi tiết</label>
+            <textarea
+              id="description"
+              rows={4}
+              placeholder="Mô tả cách đóng gói, chất lượng, ghi chú cho người mua..."
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
+        </FormFieldCard>
 
           {advisory && (
             <div className={styles.aiHint}>
@@ -443,7 +521,6 @@ export function HarvestBatchForm(props: {
       </form>
       </div>
 
-      {formError && <p role="alert" className={styles.formError}>{formError}</p>}
       <ConfirmDialog
         open={photoToRemove !== null}
         title="Xoá ảnh này?"
