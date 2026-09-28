@@ -12,7 +12,7 @@ describe('signup', () => {
 
     await expect(
       signup({ name: 'Nguyen Van B', phone: '0900000001', address: 'Ha Noi', role: 'buyer', password: 'secret123' }),
-    ).rejects.toThrow('phone_already_registered');
+    ).rejects.toMatchObject({ code: 'phone_already_registered' });
   });
 
   it('stores the exact role chosen at signup and returns it on login', async () => {
@@ -26,19 +26,19 @@ describe('signup', () => {
   it('rejects signup with a password shorter than the minimum length', async () => {
     await expect(
       signup({ name: 'Le Van C', phone: '0900000003', address: 'Hue', role: 'farmer', password: '123' }),
-    ).rejects.toThrow('invalid_input');
+    ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 
   it('rejects public self-signup with the admin role', async () => {
     await expect(
       signup({ name: 'Le Van F', phone: '0900000006', address: 'Hue', role: 'admin', password: 'secret123' }),
-    ).rejects.toThrow('invalid_input');
+    ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 
   it('rejects public self-signup with the logistics role', async () => {
     await expect(
       signup({ name: 'Le Van G', phone: '0900000007', address: 'Hue', role: 'logistics', password: 'secret123' }),
-    ).rejects.toThrow('invalid_input');
+    ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 });
 
@@ -52,7 +52,7 @@ describe('login', () => {
 
     await expect(
       login({ phone: '0900000004', password: 'wrong-password' }),
-    ).rejects.toThrow('invalid_credentials');
+    ).rejects.toMatchObject({ code: 'invalid_credentials' });
   });
 
   it('logs in successfully with the correct password', async () => {

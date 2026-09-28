@@ -1,13 +1,12 @@
 import { prisma } from '@/lib/db';
-import { transitionPreOrderStatus } from '@/lib/services/preOrderService';
-import { payDeposit } from '@/lib/services/depositService';
-import { markBatchAwaitingHarvest, markBatchReadyForHandover, updateDeliveryStatus } from '@/lib/services/deliveryService';
-import { settlePreOrder } from '@/lib/services/settlementService';
+import { confirmPreOrder, transitionPreOrderStatus } from '@/lib/order-services/preOrderService';
+import { calculateDepositAmount } from '@/lib/order/depositAmount';
+import { calculateGoodsAmount } from '@/lib/order/orderPricing';
+import { payDeposit } from '@/lib/order-services/depositService';
+import { markBatchAwaitingHarvest, markBatchReadyForHandover, updateDeliveryStatus } from '@/lib/order-services/deliveryService';
+import { proposeSettlement, respondToAgreement } from '@/lib/order-services/agreementService';
 import type { DemoPreOrderTargetStatus } from './seedData';
 
-// Advances a freshly created pre_order through the exact event sequence required by
-// preOrderService's state machine (00-project-charter.rule.md §4) to reach `target`,
-// reusing existing services rather than writing new status/deposit logic for seed data.
 export async function advanceDemoPreOrder(
   preOrderId: string,
   batchId: string,
@@ -32,12 +31,14 @@ export async function advanceDemoPreOrder(
   }
 
   const preOrder = await prisma.preOrder.findUniqueOrThrow({ where: { id: preOrderId } });
-  // TODO(business-confirm): demo deposit is a flat 20% of goods value; real deposit terms are negotiated per order.
-  const depositAmount = Math.round(preOrder.quantity * preOrder.pricePerUnit * 0.2);
-  await payDeposit(preOrderId, depositAmount);
-  await transitionPreOrderStatus(preOrderId, 'confirm', { id: farmerId, role: 'farmer' });
+  await confirmPreOrder(preOrderId, { id: farmerId, role: 'farmer' });
+  await payDeposit(preOrderId, calculateDepositAmount(calculateGoodsAmount(preOrder.quantity, preOrder.pricePerUnit)));
   if (target === 'deposited') return;
 
+  const needsCarrier = target === 'in_transit' || target === 'delivered' || target === 'settled';
+  if (needsCarrier) {
+    await prisma.preOrder.update({ where: { id: preOrderId }, data: { deliveryMethod: 'carrier', shippingFeeQuote: 0 } });
+  }
   await markBatchAwaitingHarvest(batchId, farmerId);
   if (target === 'awaiting_harvest') return;
 
@@ -51,6 +52,6 @@ export async function advanceDemoPreOrder(
   await updateDeliveryStatus(preOrderId, { id: logisticsUserId, role: 'logistics' }, 'delivered');
   if (target === 'delivered') return;
 
-  // TODO(business-confirm): demo settlement assumes no quantity shrinkage and a zero shipping fee.
-  await settlePreOrder(preOrderId, { finalQuantity: preOrder.quantity, shippingFee: 0 });
+  const agreement = await proposeSettlement(preOrderId, { id: buyerId, role: 'buyer' }, preOrder.quantity);
+  await respondToAgreement(agreement.id, { id: farmerId, role: 'farmer' }, 'accept');
 }

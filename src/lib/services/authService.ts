@@ -17,14 +17,14 @@ export type SignupInput = { name: string; phone: string; address: string; role: 
 export type LoginInput = { phone: string; password: string };
 
 function assertValidSignupInput(input: SignupInput) {
-  if (!input.name?.trim()) throw new ApiError('invalid_input', 'invalid_input: name is required', 400);
-  if (!input.phone?.trim()) throw new ApiError('invalid_input', 'invalid_input: phone is required', 400);
-  if (!input.address?.trim()) throw new ApiError('invalid_input', 'invalid_input: address is required', 400);
+  if (!input.name?.trim()) throw new ApiError('invalid_input', 'Cần nhập họ tên.', 400);
+  if (!input.phone?.trim()) throw new ApiError('invalid_input', 'Cần nhập số điện thoại.', 400);
+  if (!input.address?.trim()) throw new ApiError('invalid_input', 'Cần nhập địa chỉ.', 400);
   if (!SELF_SIGNUP_ROLES.includes(input.role as (typeof SELF_SIGNUP_ROLES)[number])) {
-    throw new ApiError('invalid_input', 'invalid_input: role must be one of farmer/buyer', 400);
+    throw new ApiError('invalid_input', 'Vai trò phải là nông dân hoặc người mua.', 400);
   }
   if (!input.password || input.password.length < MIN_PASSWORD_LENGTH) {
-    throw new ApiError('invalid_input', `invalid_input: password must be at least ${MIN_PASSWORD_LENGTH} characters`, 400);
+    throw new ApiError('invalid_input', `Mật khẩu phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự.`, 400);
   }
 }
 
@@ -32,7 +32,7 @@ export async function signup(input: SignupInput) {
   assertValidSignupInput(input);
 
   const existing = await prisma.user.findUnique({ where: { phone: input.phone } });
-  if (existing) throw new ApiError('phone_already_registered', 'phone_already_registered', 409);
+  if (existing) throw new ApiError('phone_already_registered', 'Số điện thoại này đã được đăng ký.', 409);
 
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS);
 
@@ -42,14 +42,14 @@ export async function signup(input: SignupInput) {
 }
 
 export async function login(input: LoginInput) {
-  if (!input.phone?.trim()) throw new ApiError('invalid_input', 'invalid_input: phone is required', 400);
-  if (!input.password) throw new ApiError('invalid_input', 'invalid_input: password is required', 400);
+  if (!input.phone?.trim()) throw new ApiError('invalid_input', 'Cần nhập số điện thoại.', 400);
+  if (!input.password) throw new ApiError('invalid_input', 'Cần nhập mật khẩu.', 400);
 
   const user = await prisma.user.findUnique({ where: { phone: input.phone } });
-  if (!user) throw new ApiError('invalid_credentials', 'invalid_credentials', 401);
+  if (!user) throw new ApiError('invalid_credentials', 'Số điện thoại hoặc mật khẩu chưa đúng.', 401);
 
   const passwordMatches = await bcrypt.compare(input.password, user.passwordHash);
-  if (!passwordMatches) throw new ApiError('invalid_credentials', 'invalid_credentials', 401);
+  if (!passwordMatches) throw new ApiError('invalid_credentials', 'Số điện thoại hoặc mật khẩu chưa đúng.', 401);
 
   return user;
 }
