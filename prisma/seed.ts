@@ -3,12 +3,15 @@ import { prisma } from '../src/lib/db';
 import { DEMO_ACCOUNTS, DEMO_HARVEST_BATCHES, DEMO_PRE_ORDERS } from './seedData';
 import { createPreOrder } from '../src/lib/order-services/preOrderService';
 import { advanceDemoPreOrder } from './seedPreOrderProgression';
+import { buildSeedBatchPhotoRows, seedPhotoUrlsForCrop } from './seedBatchPhotos';
 
 function demoPasswordHashForPhone(phone: string): string {
   return bcrypt.hashSync(`demo${phone.slice(-3)}`, 10);
 }
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') throw new Error('Refusing to seed demo data with NODE_ENV=production');
+
   await prisma.disputeLog.deleteMany();
   await prisma.deliveryRecord.deleteMany();
   await prisma.ledgerEntry.deleteMany();
@@ -56,6 +59,8 @@ async function main() {
     const farmer = farmersByKey.get(batch.farmerKey);
     if (!farmer) throw new Error(`No DEMO_ACCOUNTS farmer found for farmerKey "${batch.farmerKey}"`);
 
+    const photoUrls = seedPhotoUrlsForCrop(batch.cropName);
+
     const createdBatch = await prisma.harvestBatch.create({
       data: {
         farmerId: farmer.id,
@@ -66,13 +71,15 @@ async function main() {
         pricePerUnit: batch.pricePerUnit,
         harvestDateEstimate: new Date(Date.now() + batch.harvestDateOffsetDays * 24 * 60 * 60 * 1000),
         status: batch.status,
-        photoUrl: batch.photoUrl,
+        photoUrl: photoUrls[0],
         location: batch.location,
         qualityStandard: batch.qualityStandard,
         minOrderQuantity: batch.minOrderQuantity ?? 1,
         description: batch.description,
       },
     });
+
+    await prisma.harvestBatchPhoto.createMany({ data: buildSeedBatchPhotoRows(createdBatch.id, photoUrls) });
 
     batchesByKey.set(batch.batchKey, createdBatch);
 
