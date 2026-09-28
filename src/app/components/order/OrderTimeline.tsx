@@ -1,6 +1,5 @@
 import { buildTimeline } from '@/lib/order/orderWorkflow';
 import { preOrderStatusInfo } from '@/lib/order/orderStatus';
-import { CheckCircleIcon, CrossCircleIcon } from '../ui/icons';
 import styles from './OrderTimeline.module.css';
 
 const STATE_TEXT = { done: 'Đã qua', current: 'Hiện tại', upcoming: 'Sắp tới' } as const;
@@ -16,23 +15,20 @@ export function OrderTimeline({ status }: { status: string }) {
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
-      {isStopped && (
-        <p className={styles.stopped} role="status">
-          <CrossCircleIcon className={styles.stoppedIcon} />
-          {preOrderStatusInfo(status).label}: đơn không tiếp tục theo các bước dưới đây.
-        </p>
-      )}
-      <ol className={styles.track} aria-label="Tiến trình đơn hàng" style={{ '--fill-ratio': fillPercent / 100 } as React.CSSProperties}>
-        {steps.map((step) => (
-          <li key={step.status} className={`${styles.step} ${styles[step.state]}`} aria-current={step.state === 'current' ? 'step' : undefined}>
-            <span className={styles.dot} aria-hidden="true">
-              {step.state === 'done' && <CheckCircleIcon className={styles.check} />}
-            </span>
-            <span className={styles.label}>{preOrderStatusInfo(step.status).label}</span>
-            <span className={styles.stateText}>{STATE_TEXT[step.state]}</span>
-          </li>
-        ))}
-      </ol>
+        {isStopped && (
+          <p className={styles.stopped} role="status">
+            {preOrderStatusInfo(status).label}: đơn không tiếp tục theo các bước dưới đây.
+          </p>
+        )}
+        <ol className={styles.track} aria-label="Tiến trình đơn hàng" style={{ '--fill-ratio': fillPercent / 100 } as React.CSSProperties}>
+          {steps.map((step, index) => (
+            <li key={step.status} className={`${styles.step} ${styles[step.state]}`} aria-current={step.state === 'current' ? 'step' : undefined}>
+              <span className={styles.dot} aria-hidden="true">{index + 1}</span>
+              <span className={styles.label}>{preOrderStatusInfo(step.status).label}</span>
+              <span className={styles.stateText}>{STATE_TEXT[step.state]}</span>
+            </li>
+          ))}
+        </ol>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { ActionGroup } from '../ui/ActionGroup';
 import { Button } from '../ui/Button';
-import { InfoCircleIcon } from '../ui/icons';
 import { formatVnd } from '../order/MoneySummaryRow';
 import styles from './AgreementBanner.module.css';
 
@@ -66,24 +66,24 @@ export function AgreementBanner({ agreement, viewerId, proposerName, unit, busy,
     if (dismissed) return null;
     return (
       <section className={styles.banner} aria-label="Đề xuất đã bị từ chối">
-        <p className={styles.heading} role="status"><InfoCircleIcon className={styles.icon} />Đề xuất không được đồng ý</p>
+        <p className={styles.heading} role="status">Đề xuất không được đồng ý</p>
         <p className={styles.text}>{describeDeclined(agreement, isMine, proposerName)}</p>
-        <div className={styles.actions}>
+        <ActionGroup>
           <Button variant="outline" onClick={() => { rememberDismissed(agreement.id); setDismissed(true); }}>Đã hiểu</Button>
-        </div>
+        </ActionGroup>
       </section>
     );
   }
   return (
     <section className={styles.banner} aria-label="Đề xuất đang chờ phản hồi">
-      <p className={styles.heading} role="status"><InfoCircleIcon className={styles.icon} />{isMine ? 'Đang chờ bên kia phản hồi' : 'Cần bạn phản hồi'}</p>
+      <p className={styles.heading} role="status">{isMine ? 'Đang chờ bên kia phản hồi' : 'Cần bạn phản hồi'}</p>
       <p className={styles.text}>{describeProposal(agreement, isMine, proposerName, unit)}</p>
       {!isMine && (
         <>
-          <div className={styles.actions}>
+          <ActionGroup>
             <Button disabled={busy} onClick={() => onRespond(agreement, 'accept')}>Đồng ý</Button>
             <Button variant="outline" disabled={busy} onClick={() => onRespond(agreement, 'decline')}>Không đồng ý</Button>
-          </div>
+          </ActionGroup>
           <p className={styles.hint}>Nếu bạn không đồng ý, đơn giữ nguyên như hiện tại.</p>
         </>
       )}

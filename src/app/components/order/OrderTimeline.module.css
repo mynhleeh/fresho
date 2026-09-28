@@ -19,14 +19,8 @@
   font-size: var(--font-size-sm);
 }
 
-.stoppedIcon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
 .track {
-  --dot-size: 20px;
+  --dot-size: 28px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -75,23 +69,22 @@
   display: grid;
   place-items: center;
   z-index: 1;
-}
-
-.check {
-  width: var(--dot-size);
-  height: var(--dot-size);
-  color: var(--color-stage-delivered);
-  background: var(--color-paper);
-  border-radius: 50%;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-ink-muted);
 }
 
 .done .dot {
   border-color: var(--color-stage-delivered);
+  background: var(--color-stage-delivered);
+  color: var(--color-paper);
 }
 
 .current .dot {
   border-color: var(--color-stage-confirming);
   background: var(--color-stage-confirming);
+  color: var(--color-gold-night);
   box-shadow: 0 0 0 4px var(--color-gold-cream);
   animation: currentPulse 2s ease-in-out infinite;
 }

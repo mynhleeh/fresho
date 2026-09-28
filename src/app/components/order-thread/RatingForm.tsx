@@ -27,7 +27,6 @@ export function RatingForm({ preOrderId, alreadyRated, onSubmitted }: { preOrder
 
   return (
     <div className={styles.form}>
-      <span className={styles.title}>Đánh giá giao dịch</span>
       <label>
         Chất lượng
         <select value={qualityScore} onChange={(e) => setQualityScore(Number(e.target.value))}>

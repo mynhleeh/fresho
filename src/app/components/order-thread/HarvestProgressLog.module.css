@@ -1,12 +1,37 @@
 .log {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin-top: var(--space-2);
-  font-size: 13px;
-  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  color: var(--color-ink-soft);
+}
+
+.entry {
+  position: relative;
+  padding-left: var(--space-4);
+}
+
+.entry::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-leaf-bright);
 }
 
 .kind {
   font-weight: 700;
+  color: var(--color-ink);
+}
+
+.change {
+  color: var(--color-ink-muted);
+}
+
+.note {
+  color: var(--color-ink-muted);
 }
