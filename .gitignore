@@ -61,3 +61,5 @@ next-env.d.ts
 # uploaded farm photos are sensitive user data; keep only the seed sample
 /public/uploads/batches/*
 !/public/uploads/batches/seed-mango.jpg
+
+/img/
