@@ -1,6 +1,6 @@
 'use client';
 import { useState, type FormEvent } from 'react';
-import { Button } from '../components/Button';
+import { Button } from '../components/ui/Button';
 import { readAccountErrorMessage } from './accountErrors';
 import styles from './page.module.css';
 

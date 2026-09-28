@@ -1,10 +1,10 @@
 'use client';
 import Link from 'next/link';
-import { AppShell } from '../components/AppShell';
-import { displayFont } from '../components/displayFont';
+import { AppShell } from '../components/layout/AppShell';
+import { displayFont } from '../components/layout/displayFont';
 import { useAuth } from '../auth/AuthContext';
 import { ROLE_LABELS } from '../auth/roleLabels';
-import type { AppRole } from '../components/roleNav';
+import type { AppRole } from '../components/layout/roleNav';
 import { useCreateBatchPanel } from '../farmer/batches/CreateBatchPanelContext';
 import { HarvestHorizon } from './HarvestHorizon';
 import { ActionQueue, OrderPipeline } from './DashboardPanels';

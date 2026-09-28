@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import type { AppRole } from '../components/roleNav';
+import type { AppRole } from '../components/layout/roleNav';
 import {
   adminActionItems,
   bookedVolume,
@@ -40,7 +40,6 @@ function isActive(order: { status: string }): boolean {
   return ACTIVE_ORDER_STATUSES.includes(order.status);
 }
 
-// TODO(business-confirm): deposits on cancelled/rejected orders are excluded because no refund rule is defined yet.
 function isNotClosed(order: { status: string }): boolean {
   return order.status !== 'cancelled' && order.status !== 'rejected';
 }

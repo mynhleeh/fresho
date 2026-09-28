@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { AppShell } from '../components/AppShell';
-import { CameraIcon } from '../components/icons';
+import { AppShell } from '../components/layout/AppShell';
+import { CameraIcon } from '../components/ui/icons';
+import { ErrorState, LoadingSkeleton } from '../components/feedback/StateBlock';
 import { useAuth } from '../auth/AuthContext';
 import { ROLE_LABELS } from '../auth/roleLabels';
-import type { AppRole } from '../components/roleNav';
+import type { AppRole } from '../components/layout/roleNav';
 import type { AccountProfile } from '@/lib/services/accountService';
 import { readAccountErrorMessage } from './accountErrors';
 import { ProfileDetailsSection } from './ProfileDetailsSection';
@@ -16,10 +17,16 @@ export default function AccountSettings() {
   const { user } = useAuth();
   const role = (user?.role ?? 'farmer') as AppRole;
   const [account, setAccount] = useState<AccountProfile | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function loadAccount() {
-    const response = await fetch('/api/account');
-    if (response.ok) setAccount(await response.json());
+    setLoadError(null);
+    const response = await fetch('/api/account').catch(() => null);
+    if (!response || !response.ok) {
+      setLoadError(response ? await readAccountErrorMessage(response) : 'Không kết nối được máy chủ. Hãy kiểm tra mạng rồi thử lại.');
+      return;
+    }
+    setAccount(await response.json());
   }
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
@@ -42,8 +49,10 @@ export default function AccountSettings() {
             </div>
             <SessionSection />
           </>
+        ) : loadError ? (
+          <ErrorState message={loadError} onRetry={loadAccount} />
         ) : (
-          <div className={styles.loadingCard} aria-busy="true">Đang tải thông tin tài khoản…</div>
+          <LoadingSkeleton rows={3} />
         )}
       </div>
     </AppShell>

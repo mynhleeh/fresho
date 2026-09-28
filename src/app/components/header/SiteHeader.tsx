@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useAuth } from '../../auth/AuthContext';
 import { ROLE_LABELS } from '../../auth/roleLabels';
-import { Button } from '../Button';
-import buttonStyles from '../Button.module.css';
-import { ROLE_NAV_LINKS, type AppRole } from '../roleNav';
+import { Button } from '../ui/Button';
+import buttonStyles from '../ui/Button.module.css';
+import { ROLE_NAV_LINKS, type AppRole } from '../layout/roleNav';
 import styles from './SiteHeader.module.css';
 
 function isAppRole(role: string): role is AppRole {

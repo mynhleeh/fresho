@@ -1,13 +1,13 @@
 .page {
-  --land-ink: #16261a;
-  --land-green: #1b5e20;
-  --land-deep: #0f2e14;
-  --land-cream: #f7f3e6;
-  --land-paper: #fffdf6;
-  --land-gold: #c9922f;
-  --land-gold-soft: #f1d9a0;
-  --land-muted: #54594c;
-  --land-line: #e4dcc4;
+  --land-ink: var(--color-ink);
+  --land-green: var(--color-primary);
+  --land-deep: var(--color-forest-deep);
+  --land-cream: var(--color-cream);
+  --land-paper: var(--color-paper);
+  --land-gold: var(--color-accent-gold);
+  --land-gold-soft: var(--color-gold-soft);
+  --land-muted: var(--color-ink-muted);
+  --land-line: var(--color-line);
   --land-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --land-display: var(--font-display), Georgia, 'Times New Roman', serif;
 
@@ -32,7 +32,7 @@
 }
 
 .nav[data-scrolled] {
-  background: rgba(247, 243, 230, 0.82);
+  background: color-mix(in srgb, var(--color-cream) 82%, transparent);
   backdrop-filter: saturate(1.4) blur(14px);
   -webkit-backdrop-filter: saturate(1.4) blur(14px);
   box-shadow: 0 1px 0 var(--land-line);
@@ -128,19 +128,19 @@
 .ctaPrimary {
   background: var(--land-green);
   color: var(--land-paper);
-  box-shadow: 0 10px 24px -12px rgba(27, 94, 32, 0.7);
+  box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--color-primary) 70%, transparent);
 }
 
 .ctaPrimary:hover,
 .ctaPrimaryLight:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 30px -14px rgba(27, 94, 32, 0.75);
+  box-shadow: 0 16px 30px -14px color-mix(in srgb, var(--color-primary) 75%, transparent);
 }
 
 .ctaGhost {
   color: var(--land-ink);
   border: 1.5px solid var(--land-line);
-  background: rgba(255, 253, 246, 0.6);
+  background: color-mix(in srgb, var(--color-paper) 60%, transparent);
 }
 
 .ctaGhost:hover {
@@ -249,7 +249,7 @@
 .heroFrame {
   overflow: hidden;
   border-radius: 200px 200px 28px 28px;
-  box-shadow: 0 40px 80px -40px rgba(22, 38, 26, 0.45), inset 0 0 0 1px rgba(22, 38, 26, 0.06);
+  box-shadow: 0 40px 80px -40px color-mix(in srgb, var(--color-ink) 45%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 6%, transparent);
   aspect-ratio: 1;
 }
 
@@ -297,7 +297,7 @@
 .floatingChip {
   position: absolute;
   background: var(--land-paper);
-  box-shadow: 0 24px 48px -24px rgba(22, 38, 26, 0.4), 0 0 0 1px rgba(22, 38, 26, 0.05);
+  box-shadow: 0 24px 48px -24px color-mix(in srgb, var(--color-ink) 40%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-ink) 5%, transparent);
 }
 
 .batchCard {
@@ -339,7 +339,7 @@
   height: 8px;
   margin: 6px 0 2px;
   border-radius: 999px;
-  background: #ece6d2;
+  background: var(--color-cream-shade);
   overflow: hidden;
 }
 
@@ -348,7 +348,7 @@
   width: 62%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--land-green), #4c8b3a);
+  background: linear-gradient(90deg, var(--land-green), var(--color-leaf-bright));
   transform-origin: left;
   animation: fill-bar 1.6s var(--land-ease) 0.9s both;
 }
@@ -370,7 +370,7 @@
   height: 10px;
   border-radius: 50%;
   background: var(--land-green);
-  box-shadow: 0 0 0 0 rgba(27, 94, 32, 0.45);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 45%, transparent);
   animation: pulse 2.4s ease-out infinite;
 }
 
@@ -386,7 +386,7 @@
   overflow: hidden;
   border-block: 1px solid var(--land-line);
   background: var(--land-paper);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, var(--color-black) 8%, var(--color-black) 92%, transparent);
 }
 
 .marqueeTrack {
@@ -457,15 +457,15 @@
 
 .audiencePanel:hover {
   transform: translateY(-6px);
-  box-shadow: 0 30px 60px -36px rgba(22, 38, 26, 0.45);
+  box-shadow: 0 30px 60px -36px color-mix(in srgb, var(--color-ink) 45%, transparent);
 }
 
 .audienceField {
-  background: #e3eed6;
+  background: var(--color-mint-strong);
 }
 
 .audienceMarket {
-  background: #f3e6c8;
+  background: var(--color-cream-warm);
   transition-delay: 0.08s;
 }
 
@@ -491,7 +491,7 @@
   list-style: none;
   font-size: 16px;
   line-height: 1.55;
-  color: #3d4237;
+  color: var(--color-ink-soft);
 }
 
 .audienceList li {
@@ -524,13 +524,13 @@
   font-family: var(--font-family-base);
   font-size: 11px;
   font-weight: 700;
-  fill: #3d6b30;
+  fill: var(--color-leaf-mid);
 }
 
 .processSection {
   position: relative;
   padding: clamp(72px, 10vw, 136px) clamp(16px, 4vw, 40px);
-  background: radial-gradient(90% 120% at 85% 0%, #1f5424 0%, var(--land-deep) 60%);
+  background: radial-gradient(90% 120% at 85% 0%, var(--color-leaf-dark) 0%, var(--land-deep) 60%);
   color: var(--land-paper);
 }
 
@@ -562,7 +562,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: rgba(255, 253, 246, 0.16);
+  background: color-mix(in srgb, var(--color-paper) 16%, transparent);
 }
 
 .processRail::after {
@@ -610,7 +610,7 @@
 .processBody {
   font-size: 15px;
   line-height: 1.6;
-  color: rgba(255, 253, 246, 0.72);
+  color: color-mix(in srgb, var(--color-paper) 72%, transparent);
 }
 
 .transparencyGrid {
@@ -659,7 +659,7 @@
   padding: 32px 32px 36px;
   background: var(--land-paper);
   border-radius: 20px 20px 4px 4px;
-  box-shadow: 0 40px 80px -48px rgba(22, 38, 26, 0.5), 0 0 0 1px rgba(22, 38, 26, 0.05);
+  box-shadow: 0 40px 80px -48px color-mix(in srgb, var(--color-ink) 50%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-ink) 5%, transparent);
   transform: rotate(1.2deg);
 }
 
@@ -706,7 +706,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 16px 0;
-  border-bottom: 1px solid #efe9d8;
+  border-bottom: 1px solid var(--color-cream-edge);
 }
 
 .receiptLine dt {
@@ -770,8 +770,8 @@
   text-align: center;
   color: var(--land-paper);
   background:
-    radial-gradient(60% 90% at 15% 110%, rgba(201, 146, 47, 0.35) 0%, transparent 60%),
-    radial-gradient(70% 90% at 90% -10%, #2a6b2f 0%, transparent 55%),
+    radial-gradient(60% 90% at 15% 110%, color-mix(in srgb, var(--color-accent-gold) 35%, transparent) 0%, transparent 60%),
+    radial-gradient(70% 90% at 90% -10%, var(--color-leaf-deep) 0%, transparent 55%),
     var(--land-deep);
 }
 
@@ -789,7 +789,7 @@
   max-width: 460px;
   font-size: 17px;
   line-height: 1.6;
-  color: rgba(255, 253, 246, 0.78);
+  color: color-mix(in srgb, var(--color-paper) 78%, transparent);
 }
 
 .footer {
@@ -877,8 +877,8 @@
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(27, 94, 32, 0.45); }
-  70%, 100% { box-shadow: 0 0 0 12px rgba(27, 94, 32, 0); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 45%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--color-primary) 0%, transparent); }
 }
 
 @keyframes marquee {

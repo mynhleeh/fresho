@@ -1,24 +1,3 @@
-.page {
-  /* TODO(business-confirm): 1800px chosen as a simple cap so the grid can reach
-     4+ columns on wide desktop monitors without stretching indefinitely on
-     ultra-wide/4K displays; no official design-system container token exists yet. */
-  max-width: 1800px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.heading {
-  font-size: 26px;
-  font-weight: 800;
-}
-
-.subheading {
-  color: var(--color-text-muted);
-  margin-top: var(--space-1);
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -66,43 +45,15 @@
   max-width: 360px;
 }
 
-.orderPanel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
 .orderPanelTitle {
   font-size: 18px;
   font-weight: 700;
 }
 
-.quantityRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.quantityRow input {
-  width: 120px;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
+.saveError {
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
-}
-
-.depositCallout {
-  background: var(--color-primary-light);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
-}
-
-.depositCalloutLabel {
-  font-size: 13px;
-  color: var(--color-text-muted);
-}
-
-.depositCalloutValue {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--color-primary);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  font-weight: 700;
 }

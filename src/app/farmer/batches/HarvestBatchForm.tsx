@@ -1,10 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Button } from '../../components/Button';
-import { formatVnd } from '../../components/MoneySummaryRow';
-import { SparkleIcon } from '../../components/icons';
-import { batchStatusInfo } from '@/lib/orderStatus';
-import { StatusBadge } from '../../components/StatusBadge';
+import { Button } from '../../components/ui/Button';
+import { formatVnd } from '../../components/order/MoneySummaryRow';
+import { SparkleIcon } from '../../components/ui/icons';
+import { batchStatusInfo } from '@/lib/order/orderStatus';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
+import { NETWORK_ERROR_MESSAGE, readApiErrorMessage } from '@/lib/apiErrorMessage';
 import { BatchCard, type Batch } from './BatchCard';
 import { BatchPhotoGallery, type GalleryPhoto } from './BatchPhotoGallery';
 import styles from './HarvestBatchForm.module.css';
@@ -78,6 +80,9 @@ export function HarvestBatchForm(props: {
   const { mode, initialBatch } = props;
   const [form, setForm] = useState<FormState>(() => formStateFromBatch(initialBatch));
   const [photos, setPhotos] = useState<FormPhoto[]>([]);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [photoToRemove, setPhotoToRemove] = useState<PersistedPhoto | null>(null);
   const [advisory, setAdvisory] = useState<{
     suggestedMinPrice: number | null;
     suggestedMaxPrice: number | null;
@@ -111,6 +116,10 @@ export function HarvestBatchForm(props: {
     return () => clearTimeout(timeout);
   }, [form.cropName]);
 
+  async function reportFailure(res: Response) {
+    setFormError(await readApiErrorMessage(res));
+  }
+
   function addPendingPhoto(file: File) {
     setPhotos((current) => [
       ...current,
@@ -123,8 +132,7 @@ export function HarvestBatchForm(props: {
     body.set('photo', file);
     const res = await fetch(`/api/batches/${batchId}/photos`, { method: 'POST', body });
     if (!res.ok) {
-      const error = await res.json();
-      alert(error.message ?? error.code);
+      await reportFailure(res);
       return;
     }
     const photo: { id: string; url: string; isCover: boolean } = await res.json();
@@ -142,8 +150,7 @@ export function HarvestBatchForm(props: {
   async function removePersistedPhoto(batchId: string, photoId: string) {
     const res = await fetch(`/api/batches/${batchId}/photos/${photoId}`, { method: 'DELETE' });
     if (!res.ok) {
-      const error = await res.json();
-      alert(error.message ?? error.code);
+      await reportFailure(res);
       return;
     }
     const refreshed = await fetch(`/api/batches/${batchId}/photos`);
@@ -162,8 +169,7 @@ export function HarvestBatchForm(props: {
       body: JSON.stringify({ isCover: true }),
     });
     if (!res.ok) {
-      const error = await res.json();
-      alert(error.message ?? error.code);
+      await reportFailure(res);
       return;
     }
     setPhotos((current) => current.map((p) => ({ ...p, isCover: p.kind === 'persisted' && p.id === photoId })));
@@ -177,8 +183,7 @@ export function HarvestBatchForm(props: {
       body.set('photo', photo.file);
       const res = await fetch(`/api/batches/${batchId}/photos`, { method: 'POST', body });
       if (!res.ok) {
-        const error = await res.json();
-        alert(error.message ?? error.code);
+        await reportFailure(res);
       }
     }
   }
@@ -190,8 +195,7 @@ export function HarvestBatchForm(props: {
       body: JSON.stringify(form),
     });
     if (!res.ok) {
-      const error = await res.json();
-      alert(error.message ?? error.code);
+      await reportFailure(res);
       return;
     }
     const batch = await res.json();
@@ -206,11 +210,11 @@ export function HarvestBatchForm(props: {
     const batchId = initialBatch.id;
 
     if (!(form.quantityTotal > 0)) {
-      alert('Sản lượng dự kiến phải lớn hơn 0');
+      setFormError('Sản lượng dự kiến phải lớn hơn 0. Vui lòng nhập lại số lượng.');
       return;
     }
     if (form.minOrderQuantity > form.quantityTotal) {
-      alert('Số lượng tối thiểu đặt trước không thể vượt quá sản lượng dự kiến');
+      setFormError('Số lượng tối thiểu đặt trước không được vượt quá sản lượng dự kiến. Hãy giảm số lượng tối thiểu.');
       return;
     }
 
@@ -221,8 +225,7 @@ export function HarvestBatchForm(props: {
         body: JSON.stringify({ kind: 'quantity_adjusted', newQuantityTotal: form.quantityTotal }),
       });
       if (!res.ok) {
-        const error = await res.json();
-        alert(error.message ?? error.code);
+        await reportFailure(res);
         return;
       }
     }
@@ -234,8 +237,7 @@ export function HarvestBatchForm(props: {
         body: JSON.stringify({ kind: 'rescheduled', newHarvestDateEstimate: form.harvestDateEstimate }),
       });
       if (!res.ok) {
-        const error = await res.json();
-        alert(error.message ?? error.code);
+        await reportFailure(res);
         return;
       }
     }
@@ -254,8 +256,7 @@ export function HarvestBatchForm(props: {
       }),
     });
     if (!patchRes.ok) {
-      const error = await patchRes.json();
-      alert(error.message ?? error.code);
+      await reportFailure(patchRes);
       return;
     }
 
@@ -267,8 +268,24 @@ export function HarvestBatchForm(props: {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (mode === 'create') await submitCreate();
-    else await submitEdit();
+    if (submitting) return;
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      if (mode === 'create') await submitCreate();
+      else await submitEdit();
+    } catch {
+      setFormError(NETWORK_ERROR_MESSAGE);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function confirmRemovePhoto() {
+    if (!photoToRemove || !initialBatch) return;
+    const target = photoToRemove;
+    setPhotoToRemove(null);
+    await removePersistedPhoto(initialBatch.id, target.id);
   }
 
   const coverPhotoUrl = photos.find((p) => p.isCover)?.url ?? initialBatch?.photoUrl ?? null;
@@ -386,7 +403,7 @@ export function HarvestBatchForm(props: {
                 onRemove={(key) => {
                   const photo = photos.find((p) => p.key === key);
                   if (!photo) return;
-                  if (photo.kind === 'persisted' && initialBatch) removePersistedPhoto(initialBatch.id, photo.id);
+                  if (photo.kind === 'persisted' && initialBatch) setPhotoToRemove(photo);
                   else removePendingPhoto(key);
                 }}
                 onSetCover={(key) => {
@@ -426,9 +443,20 @@ export function HarvestBatchForm(props: {
       </form>
       </div>
 
+      {formError && <p role="alert" className={styles.formError}>{formError}</p>}
+      <ConfirmDialog
+        open={photoToRemove !== null}
+        title="Xoá ảnh này?"
+        description="Ảnh sẽ bị xoá khỏi mùa vụ ngay và không thể khôi phục."
+        confirmLabel="Xoá ảnh"
+        danger
+        onConfirm={confirmRemovePhoto}
+        onCancel={() => setPhotoToRemove(null)}
+      />
+
       <div className={styles.stickyFooter}>
         {props.onCancel && <Button type="button" variant="outline" onClick={props.onCancel}>Hủy</Button>}
-        <Button type="submit" form="harvest-batch-form">{mode === 'create' ? 'Xem trước và đăng' : 'Lưu thay đổi'}</Button>
+        <Button type="submit" form="harvest-batch-form" loading={submitting}>{mode === 'create' ? 'Xem trước và đăng' : 'Lưu thay đổi'}</Button>
       </div>
     </div>
   );

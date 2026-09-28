@@ -22,7 +22,7 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
-  box-shadow: 0 -6px 16px rgba(26, 26, 26, 0.06);
+  box-shadow: var(--shadow-card);
 }
 
 .liveSummary {
@@ -107,11 +107,6 @@
   color: var(--color-text-muted);
 }
 
-.field input:focus, .fieldWide textarea:focus, .statusSelect:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-}
-
 .field input:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -174,11 +169,20 @@
   align-items: center;
   gap: var(--space-2);
   font-weight: 700;
-  color: var(--color-warning);
+  color: var(--color-warning-text);
   margin-bottom: var(--space-1);
 }
 .aiHintIcon {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+}
+
+.formError {
+  margin: 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  font-weight: 700;
 }
