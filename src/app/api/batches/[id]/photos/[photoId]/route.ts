@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/session';
-import { deleteBatchPhoto, setCoverPhoto } from '@/lib/services/batchPhotoService';
+import { deleteBatchPhoto, setCoverPhoto } from '@/lib/batch-services/batchPhotoService';
 import { ApiError, errorResponse } from '@/lib/errors';
 
 export async function PATCH(
@@ -9,11 +9,11 @@ export async function PATCH(
   const { id, photoId } = await params;
   try {
     const user = await getCurrentUser(request);
-    if (!user || user.role !== 'farmer') throw new ApiError('forbidden', 'Only farmers can edit batch photos', 403);
+    if (!user || user.role !== 'farmer') throw new ApiError('forbidden', 'Chỉ nông dân mới sửa được ảnh lô hàng.', 403);
 
     const body = await request.json();
     if (body.isCover !== true) {
-      throw new ApiError('invalid_input', 'isCover must be true', 400);
+      throw new ApiError('invalid_input', 'Chỉ đặt được ảnh làm ảnh bìa, không bỏ được ảnh bìa.', 400);
     }
 
     await setCoverPhoto(id, user.id, photoId);
@@ -31,7 +31,7 @@ export async function DELETE(
   const { id, photoId } = await params;
   try {
     const user = await getCurrentUser(request);
-    if (!user || user.role !== 'farmer') throw new ApiError('forbidden', 'Only farmers can delete batch photos', 403);
+    if (!user || user.role !== 'farmer') throw new ApiError('forbidden', 'Chỉ nông dân mới xóa được ảnh lô hàng.', 403);
 
     await deleteBatchPhoto(id, user.id, photoId);
     return Response.json({ ok: true });

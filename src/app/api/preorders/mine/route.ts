@@ -1,18 +1,13 @@
 import { getCurrentUser } from '@/lib/session';
-import { prisma } from '@/lib/db';
+import { listPreOrdersForBuyer } from '@/lib/order-services/orderViewService';
 import { ApiError, errorResponse } from '@/lib/errors';
 
 export async function GET(request: Request) {
   try {
     const user = await getCurrentUser(request);
-    if (!user || user.role !== 'buyer') throw new ApiError('forbidden', 'Buyers only', 403);
+    if (!user || user.role !== 'buyer') throw new ApiError('forbidden', 'Chỉ người mua mới xem được danh sách này.', 403);
 
-    const preOrders = await prisma.preOrder.findMany({
-      where: { buyerId: user.id },
-      include: { batch: true, deposits: true, settlement: true, ratings: true },
-      orderBy: { createdAt: 'desc' },
-    });
-    return Response.json(preOrders);
+    return Response.json(await listPreOrdersForBuyer(user.id));
   } catch (err) {
     return errorResponse(err);
   }

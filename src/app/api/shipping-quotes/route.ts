@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/lib/session';
-import { quoteShipping, type VehicleType } from '@/lib/services/shippingQuoteService';
+import { quoteShipping, type VehicleType } from '@/lib/batch-services/shippingQuoteService';
 import { ApiError, errorResponse } from '@/lib/errors';
 
 const VEHICLE_TYPES: VehicleType[] = ['motorbike', 'small_truck', 'refrigerated_truck'];
@@ -7,11 +7,11 @@ const VEHICLE_TYPES: VehicleType[] = ['motorbike', 'small_truck', 'refrigerated_
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser(request);
-    if (!user || user.role !== 'buyer') throw new ApiError('forbidden', 'Only buyers can request a shipping quote', 403);
+    if (!user || user.role !== 'buyer') throw new ApiError('forbidden', 'Chỉ người mua mới xin báo giá vận chuyển được.', 403);
 
     const { batchId, quantity, vehicleType, distanceKm } = await request.json();
     if (!VEHICLE_TYPES.includes(vehicleType)) {
-      throw new ApiError('invalid_input', `vehicleType must be one of ${VEHICLE_TYPES.join(', ')}`, 400);
+      throw new ApiError('invalid_input', `Loại xe phải là một trong: ${VEHICLE_TYPES.join(', ')}.`, 400);
     }
 
     const quote = await quoteShipping({

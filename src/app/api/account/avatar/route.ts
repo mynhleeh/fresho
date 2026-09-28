@@ -6,12 +6,12 @@ import { ApiError, errorResponse } from '@/lib/errors';
 export async function POST(request: Request) {
   try {
     const sessionUser = await getCurrentUser(request);
-    if (!sessionUser) throw new ApiError('unauthorized', 'unauthorized', 401);
+    if (!sessionUser) throw new ApiError('unauthorized', 'Vui lòng đăng nhập.', 401);
 
     const formData = await request.formData();
     const file = formData.get('avatar');
     if (!(file instanceof File)) {
-      throw new ApiError('invalid_input', 'avatar file is required', 400);
+      throw new ApiError('invalid_input', 'Cần chọn ảnh đại diện để tải lên.', 400);
     }
 
     const url = await saveUploadedAvatarImage(file);

@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@/lib/session';
-import { addBatchPhoto, listPhotosByBatch, listPhotosForEditing } from '@/lib/services/batchPhotoService';
-import { assertBatchOwnership, getBatch } from '@/lib/services/batchService';
+import { addBatchPhoto, listPhotosByBatch, listPhotosForEditing } from '@/lib/batch-services/batchPhotoService';
+import { assertBatchOwnership, getBatch } from '@/lib/batch-services/batchService';
 import { saveUploadedBatchImage } from '@/lib/uploadStorage';
 import { ApiError, errorResponse } from '@/lib/errors';
 
@@ -23,13 +23,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params;
   try {
     const user = await getCurrentUser(request);
-    if (!user || user.role !== 'farmer') throw new ApiError('forbidden', 'Only farmers can upload batch photos', 403);
+    if (!user || user.role !== 'farmer') throw new ApiError('forbidden', 'Chỉ nông dân mới tải được ảnh lô hàng.', 403);
     await assertBatchOwnership(id, user.id);
 
     const formData = await request.formData();
     const file = formData.get('photo');
     if (!(file instanceof File)) {
-      throw new ApiError('invalid_input', 'photo file is required', 400);
+      throw new ApiError('invalid_input', 'Cần chọn ảnh để tải lên.', 400);
     }
 
     const url = await saveUploadedBatchImage(file);

@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   let userId = 'unknown';
   try {
     const sessionUser = await getCurrentUser(request);
-    if (!sessionUser) throw new ApiError('unauthorized', 'unauthorized', 401);
+    if (!sessionUser) throw new ApiError('unauthorized', 'Vui lòng đăng nhập.', 401);
     userId = sessionUser.id;
 
     const body = await request.json();
