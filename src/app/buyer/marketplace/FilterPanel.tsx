@@ -1,6 +1,5 @@
 'use client';
-import { useState } from 'react';
-import { Card } from '../../components/ui/Card';
+import { useState, type FormEvent } from 'react';
 import { Button } from '../../components/ui/Button';
 import styles from './FilterPanel.module.css';
 
@@ -26,81 +25,53 @@ export const EMPTY_FILTERS: BatchFilters = {
   sortBy: 'newest',
 };
 
+type InputField = Exclude<keyof BatchFilters, 'sortBy'>;
+
+const INPUT_FIELDS: { field: InputField; label: string; type: 'text' | 'number' | 'date'; placeholder?: string; isWide?: boolean }[] = [
+  { field: 'cropName', label: 'Loại hàng', type: 'text', placeholder: 'Xoài, cà chua...', isWide: true },
+  { field: 'minQuantity', label: 'Số lượng cần mua', type: 'number', placeholder: 'Tối thiểu' },
+  { field: 'location', label: 'Khu vực nhận hàng', type: 'text', placeholder: 'Tiền Giang', isWide: true },
+  { field: 'minPrice', label: 'Giá tối thiểu', type: 'number', placeholder: 'đ / đơn vị' },
+  { field: 'maxPrice', label: 'Giá tối đa', type: 'number', placeholder: 'đ / đơn vị' },
+  { field: 'harvestDateFrom', label: 'Nhận hàng từ ngày', type: 'date' },
+  { field: 'harvestDateTo', label: 'Đến ngày', type: 'date' },
+];
+
 export function FilterPanel({ onApply }: { onApply: (filters: BatchFilters) => void }) {
   const [draft, setDraft] = useState<BatchFilters>(EMPTY_FILTERS);
 
   function updateField<K extends keyof BatchFilters>(field: K, value: BatchFilters[K]) {
-    setDraft({ ...draft, [field]: value });
+    setDraft((current) => ({ ...current, [field]: value }));
+  }
+
+  function submitFilters(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onApply(draft);
+  }
+
+  function clearFilters() {
+    setDraft(EMPTY_FILTERS);
+    onApply(EMPTY_FILTERS);
   }
 
   return (
-    <Card className={styles.panel}>
+    <form className={styles.panel} onSubmit={submitFilters}>
       <div className={styles.grid}>
-        <label className={styles.field}>
-          <span>Loại hàng</span>
-          <input
-            placeholder="Xoài, cà chua..."
-            value={draft.cropName}
-            onChange={(e) => updateField('cropName', e.target.value)}
-          />
-        </label>
-        <label className={styles.field}>
-          <span>Số lượng cần mua</span>
-          <input
-            type="number"
-            min={0}
-            placeholder="Tối thiểu"
-            value={draft.minQuantity}
-            onChange={(e) => updateField('minQuantity', e.target.value)}
-          />
-        </label>
-        <label className={styles.field}>
-          <span>Khu vực nhận hàng</span>
-          <input
-            placeholder="Tiền Giang"
-            value={draft.location}
-            onChange={(e) => updateField('location', e.target.value)}
-          />
-        </label>
-        <label className={styles.field}>
-          <span>Giá tối thiểu</span>
-          <input
-            type="number"
-            min={0}
-            placeholder="đ / đơn vị"
-            value={draft.minPrice}
-            onChange={(e) => updateField('minPrice', e.target.value)}
-          />
-        </label>
-        <label className={styles.field}>
-          <span>Giá tối đa</span>
-          <input
-            type="number"
-            min={0}
-            placeholder="đ / đơn vị"
-            value={draft.maxPrice}
-            onChange={(e) => updateField('maxPrice', e.target.value)}
-          />
-        </label>
-        <label className={styles.field}>
-          <span>Nhận hàng từ ngày</span>
-          <input
-            type="date"
-            value={draft.harvestDateFrom}
-            onChange={(e) => updateField('harvestDateFrom', e.target.value)}
-          />
-        </label>
-        <label className={styles.field}>
-          <span>Đến ngày</span>
-          <input
-            type="date"
-            value={draft.harvestDateTo}
-            onChange={(e) => updateField('harvestDateTo', e.target.value)}
-          />
-        </label>
+        {INPUT_FIELDS.map(({ field, label, type, placeholder, isWide }) => (
+          <label key={field} className={`${styles.field} ${isWide ? styles.wide : ''}`}>
+            <span>{label}</span>
+            <input
+              type={type}
+              min={type === 'number' ? 0 : undefined}
+              placeholder={placeholder}
+              value={draft[field]}
+              onChange={(event) => updateField(field, event.target.value)}
+            />
+          </label>
+        ))}
         <label className={styles.field}>
           <span>Sắp xếp</span>
-          <select value={draft.sortBy} onChange={(e) => updateField('sortBy', e.target.value as BatchFilters['sortBy'])}>
+          <select value={draft.sortBy} onChange={(event) => updateField('sortBy', event.target.value as BatchFilters['sortBy'])}>
             <option value="newest">Mới nhất</option>
             <option value="harvestDate">Ngày thu hoạch gần nhất</option>
             <option value="trustScore">Uy tín người bán</option>
@@ -108,11 +79,9 @@ export function FilterPanel({ onApply }: { onApply: (filters: BatchFilters) => v
         </label>
       </div>
       <div className={styles.actionsRow}>
-        <Button variant="outline" onClick={() => { setDraft(EMPTY_FILTERS); onApply(EMPTY_FILTERS); }}>
-          Xóa lọc
-        </Button>
-        <Button onClick={() => onApply(draft)}>Áp dụng</Button>
+        <Button variant="outline" onClick={clearFilters}>Xóa lọc</Button>
+        <Button type="submit">Áp dụng</Button>
       </div>
-    </Card>
+    </form>
   );
 }

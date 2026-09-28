@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { memo } from 'react';
 import { ButtonLink } from '../../components/ui/ButtonLink';
-import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { formatVnd } from '../../components/order/MoneySummaryRow';
-import { deriveBatchPlaceholder } from '@/lib/batchPlaceholder';
-import { VegetableIcon, FruitIcon, GrainIcon, LeafIcon, BasketIcon, BookmarkIcon, TrustScoreIcon, UserCircleIcon } from '../../components/ui/icons';
+import { BookmarkIcon, UserCircleIcon } from '../../components/ui/icons';
+import { BatchPhoto, BookedMeter, TrustRing } from './BatchCardParts';
 import styles from './BuyerBatchCard.module.css';
 
 export type BuyerBatch = {
@@ -23,108 +22,96 @@ export type BuyerBatch = {
   farmer: { name: string; avatarUrl: string | null; trustScore: number };
 };
 
-const PLACEHOLDER_ICONS = {
-  vegetable: VegetableIcon,
-  fruit: FruitIcon,
-  grain: GrainIcon,
-  leaf: LeafIcon,
-  basket: BasketIcon,
-} as const;
+export type BatchSummary = Pick<
+  BuyerBatch,
+  'id' | 'cropName' | 'quantityAvailable' | 'quantityTotal' | 'unit' | 'pricePerUnit' | 'location' | 'harvestDateEstimate' | 'photoUrl' | 'farmer'
+>;
 
-function BatchThumbnail({ batch }: { batch: BuyerBatch }) {
-  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+const harvestDateFormat = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  if (batch.photoUrl && batch.photoUrl !== failedUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
-      <img
-        src={batch.photoUrl}
-        alt={batch.cropName}
-        className={styles.photo}
-        width={130}
-        height={220}
-        loading="lazy"
-        decoding="async"
-        onError={() => setFailedUrl(batch.photoUrl)}
-      />
-    );
-  }
-  const { icon, backgroundColor } = deriveBatchPlaceholder(batch.id);
-  const Icon = PLACEHOLDER_ICONS[icon];
+type BatchCardProps = {
+  batch: BatchSummary;
+  isSaved: boolean;
+  isCompared: boolean;
+  isFeatured: boolean;
+  isEager: boolean;
+  onToggleSave: (batchId: string) => void;
+  onToggleCompare: (batchId: string) => void;
+  onMessage: (batch: BatchSummary) => void;
+};
+
+function FarmerRow({ farmer }: { farmer: BatchSummary['farmer'] }) {
   return (
-    <div className={styles.placeholder} style={{ backgroundColor }}>
-      <Icon className={styles.placeholderIcon} />
+    <div className={styles.farmerRow}>
+      {farmer.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={farmer.avatarUrl} alt="" className={styles.avatar} width={40} height={40} loading="lazy" decoding="async" />
+      ) : (
+        <UserCircleIcon className={styles.avatarFallback} />
+      )}
+      <span className={styles.farmerName}>{farmer.name}</span>
+      <TrustRing score={farmer.trustScore} />
     </div>
   );
 }
 
-function formatHarvestDate(isoDate: string): string {
-  return new Date(isoDate).toLocaleDateString('vi-VN');
-}
-
-export function BuyerBatchCard(props: {
-  batch: BuyerBatch;
-  isSaved: boolean;
-  isCompared: boolean;
-  onToggleSave: () => void;
-  onToggleCompare: () => void;
-  onMessage: () => void;
-}) {
-  const { batch } = props;
-
+function BatchActions({ batch, isSaved, isCompared, onToggleSave, onToggleCompare, onMessage }: BatchCardProps) {
   return (
-    <Card className={styles.card}>
-      <div className={styles.thumbnailFrame}>
-        <BatchThumbnail batch={batch} />
+    <div className={styles.actions}>
+      <div className={styles.primaryRow}>
+        <ButtonLink href={`/buyer/marketplace/${batch.id}`} className={styles.viewLink}>Xem lô hàng</ButtonLink>
+        <Button
+          variant="outline"
+          className={`${styles.saveButton} ${isSaved ? styles.saved : ''}`}
+          aria-label={`Lưu lô ${batch.cropName}`}
+          aria-pressed={isSaved}
+          onClick={() => onToggleSave(batch.id)}
+        >
+          <BookmarkIcon className={styles.actionIcon} />
+        </Button>
       </div>
-
-      <div className={styles.body}>
-        <div className={styles.topRow}>
-          <span className={styles.cropName}>{batch.cropName}</span>
-          <span className={styles.price}>{formatVnd(batch.pricePerUnit)}/{batch.unit}</span>
-        </div>
-        <span className={styles.meta}>
-          Còn lại {batch.quantityAvailable} {batch.unit} · Tối thiểu {batch.minOrderQuantity} {batch.unit}
-        </span>
-        <span className={styles.meta}>{batch.location} · Dự kiến thu hoạch {formatHarvestDate(batch.harvestDateEstimate)}</span>
-        {batch.qualityStandard && <span className={styles.meta}>{batch.qualityStandard}</span>}
-
-        <div className={styles.farmerRow}>
-          {batch.farmer.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
-            <img
-              src={batch.farmer.avatarUrl}
-              alt={batch.farmer.name}
-              className={styles.avatar}
-              width={24}
-              height={24}
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <UserCircleIcon className={styles.avatarFallback} />
-          )}
-          <span className={styles.farmerName}>{batch.farmer.name}</span>
-          <span className={styles.trustScore}>
-            <TrustScoreIcon className={styles.trustScoreIcon} />
-            {batch.farmer.trustScore}
-          </span>
-        </div>
-
-        <div className={styles.actions}>
-          <ButtonLink href={`/buyer/marketplace/${batch.id}`} className={styles.viewLink}>Xem lô hàng</ButtonLink>
-          <Button variant="outline" onClick={props.onToggleSave}>
-            <BookmarkIcon className={styles.actionIcon} />
-            {props.isSaved ? 'Đã lưu' : 'Lưu lô'}
-          </Button>
-          <Button variant="outline" onClick={props.onToggleCompare}>
-            {props.isCompared ? 'Bỏ so sánh' : 'So sánh'}
-          </Button>
-          <Button variant="outline" onClick={props.onMessage}>
-            Nhắn tin
-          </Button>
-        </div>
+      <div className={styles.secondaryRow}>
+        <Button
+          variant="ghost"
+          className={styles.secondaryAction}
+          aria-label={`So sánh lô ${batch.cropName}`}
+          aria-pressed={isCompared}
+          onClick={() => onToggleCompare(batch.id)}
+        >
+          {isCompared ? 'Bỏ so sánh' : 'So sánh'}
+        </Button>
+        <Button variant="ghost" className={styles.secondaryAction} aria-label={`Nhắn tin về lô ${batch.cropName}`} onClick={() => onMessage(batch)}>
+          Nhắn tin
+        </Button>
       </div>
-    </Card>
+    </div>
   );
 }
+
+function BuyerBatchCardView(props: BatchCardProps) {
+  const { batch, isCompared, isFeatured, isEager } = props;
+  const cardClass = `${styles.card} ${isFeatured ? styles.featured : ''} ${isCompared ? styles.compared : ''}`;
+
+  return (
+    <article className={cardClass}>
+      <div className={styles.media}>
+        <BatchPhoto batch={batch} isEager={isEager} />
+        <span className={styles.harvestBadge}>Thu hoạch {harvestDateFormat.format(new Date(batch.harvestDateEstimate))}</span>
+      </div>
+      <div className={styles.body}>
+        <FarmerRow farmer={batch.farmer} />
+        <div className={styles.titleGroup}>
+          <h3 className={styles.cropName}>{batch.cropName}</h3>
+          <span className={styles.location}>{batch.location}</span>
+        </div>
+        <p className={styles.price}>
+          {formatVnd(batch.pricePerUnit)}<span className={styles.priceUnit}>/{batch.unit}</span>
+        </p>
+        <BookedMeter batch={batch} />
+        <BatchActions {...props} />
+      </div>
+    </article>
+  );
+}
+
+export const BuyerBatchCard = memo(BuyerBatchCardView);

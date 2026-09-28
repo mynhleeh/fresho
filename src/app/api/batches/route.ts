@@ -1,16 +1,7 @@
 import { getCurrentUser } from '@/lib/session';
 import { createBatch, listBatchesByFarmer, listOpenBatches } from '@/lib/batch-services/batchService';
+import { parseOpenBatchFilter } from '@/lib/batch-services/batchFilterParams';
 import { ApiError, errorResponse } from '@/lib/errors';
-
-const DEFAULT_PAGE_SIZE = 10;
-const MAX_PAGE_SIZE = 50;
-
-function parsePaginationParam(rawValue: string | null, defaultValue: number, maxValue: number): number {
-  if (rawValue === null) return defaultValue;
-  const parsed = Number(rawValue);
-  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 0) return defaultValue;
-  return Math.min(parsed, maxValue);
-}
 
 export async function GET(request: Request) {
   try {
@@ -23,25 +14,7 @@ export async function GET(request: Request) {
       return Response.json(batches);
     }
 
-    const harvestDateFrom = searchParams.get('harvestDateFrom');
-    const harvestDateTo = searchParams.get('harvestDateTo');
-    const sortBy = searchParams.get('sortBy');
-    const limit = parsePaginationParam(searchParams.get('limit'), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
-    const offset = parsePaginationParam(searchParams.get('offset'), 0, Number.MAX_SAFE_INTEGER);
-    const { items, total } = await listOpenBatches({
-      cropName: searchParams.get('cropName') ?? undefined,
-      minPricePerUnit: searchParams.get('minPricePerUnit') ? Number(searchParams.get('minPricePerUnit')) : undefined,
-      maxPricePerUnit: searchParams.get('maxPricePerUnit') ? Number(searchParams.get('maxPricePerUnit')) : undefined,
-      minQuantityAvailable: searchParams.get('minQuantityAvailable')
-        ? Number(searchParams.get('minQuantityAvailable'))
-        : undefined,
-      location: searchParams.get('location') ?? undefined,
-      harvestDateFrom: harvestDateFrom ? new Date(harvestDateFrom) : undefined,
-      harvestDateTo: harvestDateTo ? new Date(harvestDateTo) : undefined,
-      sortBy: sortBy === 'trustScore' || sortBy === 'harvestDate' ? sortBy : 'newest',
-      limit,
-      offset,
-    });
+    const { items, total } = await listOpenBatches(parseOpenBatchFilter(searchParams));
     return Response.json({ items, total });
   } catch (err) {
     return errorResponse(err);
