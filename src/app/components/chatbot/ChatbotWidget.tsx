@@ -8,15 +8,9 @@ import styles from './ChatbotWidget.module.css';
 
 const TYPING_DELAY_MS = 700;
 
-const GREETING_BY_ROLE: Record<ChatbotRole, string> = {
-  farmer: 'Chào anh/chị! Mình là Cố vấn mùa vụ. Mình có thể gợi ý thời điểm đăng lô, mức giá theo thị trường, ảnh hưởng thời tiết và nên nhận đơn nào.',
-  buyer: 'Chào anh/chị! Mình là Cố vấn mùa vụ. Mình có thể phân tích nên mua lô nào, thời điểm giá tốt, rủi ro thời tiết và cách chọn vận chuyển.',
-};
+const GREETING_TEXT = 'Chào anh/chị! Mình là Cố vấn mùa vụ. Anh/chị cần tư vấn điều gì hôm nay?';
 
-const FALLBACK_BY_ROLE: Record<ChatbotRole, string> = {
-  farmer: 'Mình chưa có phân tích cho câu hỏi này. Anh/chị có thể hỏi về thời điểm đăng lô, giá thị trường, thời tiết khi thu hoạch, nên trồng gì vụ tới hoặc có nên nhận một đơn đặt trước.',
-  buyer: 'Mình chưa có phân tích cho câu hỏi này. Anh/chị có thể hỏi có nên mua một lô, thời điểm giá tốt, ảnh hưởng của thời tiết, cách chọn vận chuyển hoặc độ uy tín của nông dân.',
-};
+const FALLBACK_TEXT = 'Mình chưa có phân tích cho câu hỏi này. Anh/chị thử diễn đạt lại câu hỏi giúp mình nhé.';
 
 type ChatMessage =
   | { id: number; from: 'user'; text: string }
@@ -34,9 +28,9 @@ function SproutMark({ className }: { className?: string }) {
   );
 }
 
-function BotMessage({ entry, role }: { entry: ChatbotFaqEntry | null; role: ChatbotRole }) {
+function BotMessage({ entry }: { entry: ChatbotFaqEntry | null }) {
   if (entry) return <ChatbotAnswerCard answer={entry.answer} />;
-  return <p className={styles.botBubble}>{FALLBACK_BY_ROLE[role]}</p>;
+  return <p className={styles.botBubble}>{FALLBACK_TEXT}</p>;
 }
 
 function TypingIndicator() {
@@ -94,12 +88,12 @@ function ChatPanel({ role, onClose }: { role: ChatbotRole; onClose: () => void }
         <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Đóng cố vấn">×</button>
       </header>
       <div className={styles.thread} aria-live="polite">
-        <p className={styles.botBubble}>{GREETING_BY_ROLE[role]}</p>
+        <p className={styles.botBubble}>{GREETING_TEXT}</p>
         {messages.map((message, index) => (
           <div key={message.id} ref={index === messages.length - 1 ? latestMessage : undefined} className={styles.messageRow}>
             {message.from === 'user'
               ? <p className={styles.userBubble}>{message.text}</p>
-              : <BotMessage entry={message.entry} role={role} />}
+              : <BotMessage entry={message.entry} />}
           </div>
         ))}
         {isTyping && <TypingIndicator />}
