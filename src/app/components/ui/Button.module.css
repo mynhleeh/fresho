@@ -55,6 +55,7 @@
 .ghost {
   background: transparent;
   color: var(--color-primary);
+  border-color: var(--color-border);
 }
 
 .ghost:hover:not(:disabled):not([aria-disabled='true']) {

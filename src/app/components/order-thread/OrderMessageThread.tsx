@@ -5,21 +5,29 @@ import styles from './OrderMessageThread.module.css';
 
 type Message = { id: string; senderId: string; body: string; createdAt: string };
 
-export function OrderMessageThread({ preOrderId, currentUserId }: { preOrderId: string; currentUserId: string }) {
-  const [open, setOpen] = useState(false);
+type Props = { preOrderId: string; currentUserId: string; initiallyOpen?: boolean; pollMs?: number };
+
+export function OrderMessageThread({ preOrderId, currentUserId, initiallyOpen = false, pollMs }: Props) {
+  const [open, setOpen] = useState(initiallyOpen);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
 
   async function load() {
-    const res = await fetch(`/api/preorders/${preOrderId}/messages`);
-    if (res.ok) setMessages(await res.json());
+    const res = await fetch(`/api/preorders/${preOrderId}/messages`).catch(() => null);
+    if (res?.ok) setMessages(await res.json());
   }
 
   useEffect(() => {
+    if (!open) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-open; not the cascading-render pattern this rule targets
-    if (open) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reload when the panel opens, not on every render
-  }, [open]);
+    load();
+    if (!pollMs) return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') load();
+    }, pollMs);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reload when the panel opens or the interval changes, not on every render
+  }, [open, pollMs]);
 
   async function send() {
     if (!draft.trim()) return;
@@ -51,7 +59,7 @@ export function OrderMessageThread({ preOrderId, currentUserId }: { preOrderId: 
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Nhắn tin về đơn hàng này..."
+              placeholder="Nhắn tin…"
             />
             <Button onClick={send}>Gửi</Button>
           </div>

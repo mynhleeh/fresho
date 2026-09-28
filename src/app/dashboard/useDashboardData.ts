@@ -17,7 +17,7 @@ import {
   type HorizonEntry,
 } from '@/lib/dashboardSummary';
 
-type Batch = { id: string; cropName: string; unit: string; status: string; quantityTotal: number; quantityAvailable: number; harvestDateEstimate: string };
+type Batch = { id: string; cropName: string; photoUrl?: string | null; unit: string; status: string; quantityTotal: number; quantityAvailable: number; harvestDateEstimate: string };
 type Deposit = { amount: number; status: string };
 export type DashboardOrder = { id: string; status: string; quantity: number; pricePerUnit: number; createdAt: string; batch: Batch; deposits?: Deposit[] };
 type Dispute = { id: string; status: string; reason: string; preOrder: DashboardOrder };
@@ -55,7 +55,7 @@ function formatQuantity(quantity: number, unit: string): string {
 function activeOrderEntries(orders: DashboardOrder[]): HorizonEntry[] {
   return orders
     .filter(isActive)
-    .map((order) => ({ id: order.id, cropName: order.batch.cropName, harvestDate: order.batch.harvestDateEstimate, detail: formatQuantity(order.quantity, order.batch.unit) }));
+    .map((order) => ({ id: order.id, cropName: order.batch.cropName, photoUrl: order.batch.photoUrl, harvestDate: order.batch.harvestDateEstimate, detail: formatQuantity(order.quantity, order.batch.unit) }));
 }
 
 async function loadFarmerSnapshot(today: Date): Promise<RoleSnapshot> {
@@ -63,7 +63,7 @@ async function loadFarmerSnapshot(today: Date): Promise<RoleSnapshot> {
   const volume = bookedVolume(batches);
   const horizonEntries = batches
     .filter((batch) => batch.status !== 'closed')
-    .map((batch) => ({ id: batch.id, cropName: batch.cropName, harvestDate: batch.harvestDateEstimate, detail: `Đã đặt ${formatQuantity(batch.quantityTotal - batch.quantityAvailable, batch.unit)} / ${batch.quantityTotal.toLocaleString('vi-VN')}` }));
+    .map((batch) => ({ id: batch.id, cropName: batch.cropName, photoUrl: batch.photoUrl, harvestDate: batch.harvestDateEstimate, detail: `Đã đặt ${formatQuantity(batch.quantityTotal - batch.quantityAvailable, batch.unit)} / ${batch.quantityTotal.toLocaleString('vi-VN')}` }));
   const kpis: DashboardKpi[] = [
     { label: 'Lô đang mở đặt trước', value: String(countWithStatus(batches, ['open'])), note: `${batches.filter((batch) => batch.status !== 'closed').length} lô chưa kết thúc` },
     { label: 'Sản lượng đã được đặt', value: `${volume.percent}%`, note: `${volume.booked.toLocaleString('vi-VN')} / ${volume.total.toLocaleString('vi-VN')} trên các lô chưa kết thúc`, highlight: true },

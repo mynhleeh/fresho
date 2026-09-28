@@ -38,9 +38,9 @@ export const PRIMARY_KIND: Partial<Record<FarmerAction, ActionKind>> = {
   hand_to_carrier: 'hand_to_carrier',
 };
 
-export type ConfirmCopy = { title: string; description: string; confirmLabel: string; danger: boolean };
+type ConfirmCopy = { title: string; description: string; confirmLabel: string; danger: boolean };
 
-const BATCH_LEVEL_NOTE = 'Thao tác này áp dụng cho tất cả đơn của cùng lô hàng đang ở bước này, không chỉ đơn bạn vừa mở.';
+const BATCH_LEVEL_NOTE = 'Thao tác này áp dụng cho tất cả đơn của cùng lô hàng đang ở bước này, không chỉ đơn này.';
 
 export const IN_TRANSIT_WAIT_TEXT = 'Đã giao cho vận chuyển. Đang chờ người mua xác nhận hàng đã đến.';
 
@@ -76,6 +76,24 @@ export const CONFIRM_COPY: Partial<Record<ActionKind, ConfirmCopy>> = {
     danger: false,
   },
 };
+
+const NEXT_STEP_TEXT: Partial<Record<FarmerAction, string>> = {
+  ...WAIT_TEXT,
+  confirm: 'Xác nhận hoặc từ chối đơn này',
+  start_harvest_wait: 'Đã nhận cọc, chuyển đơn sang chờ thu hoạch',
+  mark_ready_for_handover: 'Báo sẵn sàng khi thu hoạch xong',
+  confirm_self_pickup: 'Xác nhận sau khi người mua lấy hàng',
+  hand_to_carrier: 'Giao hàng cho đơn vị vận chuyển',
+  respond_agreement: 'Có đề xuất cần bạn phản hồi',
+  wait_for_agreement: 'Đang chờ người mua phản hồi đề xuất của bạn',
+};
+
+export function nextStepTextOf(order: FarmerPreOrder, action: FarmerAction): string {
+  const text = NEXT_STEP_TEXT[action];
+  if (text) return text;
+  if (order.status === 'in_transit') return IN_TRANSIT_WAIT_TEXT;
+  return 'Không cần bạn làm gì lúc này';
+}
 
 export function secondaryKindsOf(order: FarmerPreOrder): ActionKind[] {
   if (order.status === 'pending_confirmation') return order.farmerConfirmedAt ? ['reject'] : ['negotiate', 'reject'];

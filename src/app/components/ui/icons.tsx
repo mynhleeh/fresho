@@ -30,16 +30,6 @@ export function BuyerStoreIcon({ className }: { className?: string }) {
   );
 }
 
-export function DepositIcon({ className }: { className?: string }) {
-  return (
-    <svg {...baseProps} className={className}>
-      <rect x="3" y="6" width="18" height="13" rx="2" />
-      <path d="M3 10h18" />
-      <path d="M7 15h4" />
-    </svg>
-  );
-}
-
 export function TrustScoreIcon({ className }: { className?: string }) {
   return (
     <svg {...baseProps} className={className}>

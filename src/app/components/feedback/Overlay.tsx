@@ -42,14 +42,12 @@ export function Overlay({
   onClose,
   label,
   dismissible = true,
-  variant = 'modal',
   children,
 }: {
   open: boolean;
   onClose: () => void;
   label?: string;
   dismissible?: boolean;
-  variant?: 'modal' | 'drawer';
   children: ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -72,14 +70,14 @@ export function Overlay({
   };
 
   return (
-    <div className={`${styles.backdrop} ${variant === 'drawer' ? styles.drawerBackdrop : ''}`} onClick={requestClose}>
+    <div className={styles.backdrop} onClick={requestClose}>
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={label}
         tabIndex={-1}
-        className={`${styles.panel} ${variant === 'drawer' ? styles.drawerPanel : ''}`}
+        className={styles.panel}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >

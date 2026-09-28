@@ -1,6 +1,6 @@
 import { calculateGoodsAmount } from '@/lib/order/orderPricing';
 import type { AgreementView } from '../../../components/agreement/AgreementBanner';
-import { buildTimeline, toOpenAgreement, farmerOrderGroup, farmerPrimaryAction, type FarmerAction, type FarmerGroup, type OrderSnapshot } from '@/lib/order/orderWorkflow';
+import { toOpenAgreement, farmerOrderGroup, farmerPrimaryAction, type FarmerAction, type FarmerGroup, type OrderSnapshot } from '@/lib/order/orderWorkflow';
 
 export type FarmerPreOrder = {
   id: string;
@@ -12,10 +12,22 @@ export type FarmerPreOrder = {
   farmerConfirmedAt: string | null;
   agreements: AgreementView[];
   buyer: { id: string; name: string; trustScore: number; phone?: string; address?: string };
-  batch: { cropName: string; unit?: string; quantityTotal: number; harvestDateEstimate?: string };
+  batch: { cropName: string; photoUrl?: string | null; unit?: string; quantityTotal: number; harvestDateEstimate?: string };
   deposits: { amount: number }[];
   ratings: { raterId: string }[];
   settlement: { finalGoodsAmount: number } | null;
+};
+
+type OrderDelivery = { status: string; trackingNote: string | null };
+type OrderDispute = { id: string; reason: string; status: string; resolutionNote: string | null; createdAt: string };
+type OrderLedgerEntry = { id: string; type: string; amount: number; createdAt: string };
+
+export type FarmerOrderDetail = FarmerPreOrder & {
+  batch: FarmerPreOrder['batch'] & { farmerId: string };
+  shippingFeeQuote: number | null;
+  delivery: OrderDelivery | null;
+  disputes: OrderDispute[];
+  ledgerEntries: OrderLedgerEntry[];
 };
 
 export type OrderMoney = { goods: number; deposit: number; expected: number };
@@ -49,13 +61,6 @@ export function moneyOf(order: FarmerPreOrder): OrderMoney {
   const deposit = order.deposits.reduce((sum, entry) => sum + entry.amount, 0);
   // TODO(business-confirm): docs define no platform commission; expected amount = goods amount.
   return { goods, deposit, expected: order.settlement?.finalGoodsAmount ?? goods };
-}
-
-export function progressPercentOf(status: string): number {
-  const steps = buildTimeline(status);
-  if (status === 'settled') return 100;
-  const reached = steps.findIndex((step) => step.state === 'current');
-  return reached < 0 ? 0 : Math.round(((reached + 1) / steps.length) * 100);
 }
 
 export function countByGroup(orders: FarmerPreOrder[]): Record<FarmerGroup, number> {

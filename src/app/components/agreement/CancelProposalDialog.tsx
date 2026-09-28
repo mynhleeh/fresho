@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { ActionGroup } from '../ui/ActionGroup';
 import { Button } from '../ui/Button';
 import { Overlay } from '../feedback/Overlay';
 import { formatVnd } from '../order/MoneySummaryRow';
@@ -48,10 +49,10 @@ function CancelProposalForm({ depositTotal, busy, onSubmit, onClose }: Omit<Prop
         />
       </label>
       {problem && <p id="cancel-refund-problem" role="alert" className={styles.problem}>{problem}</p>}
-      <div className={styles.actions}>
-        <Button variant="outline" type="button" onClick={onClose} disabled={busy}>Quay lại</Button>
+      <ActionGroup>
         <Button variant="danger" type="submit" loading={busy} disabled={value === null || refundText === ''}>Gửi đề nghị hủy</Button>
-      </div>
+        <Button variant="outline" type="button" onClick={onClose} disabled={busy}>Quay lại</Button>
+      </ActionGroup>
     </form>
   );
 }

@@ -2,24 +2,16 @@
   display: grid;
   gap: var(--space-2);
   padding: var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-stage-confirming);
+  border-radius: var(--radius-sm) 36px var(--radius-sm) var(--radius-lg);
   background: var(--color-gold-cream);
   color: var(--color-gold-ink);
 }
 
 .heading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
   margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-lg);
   font-weight: 700;
-}
-
-.icon {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
 }
 
 .text {
@@ -31,11 +23,4 @@
   margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-gold-text);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
 }

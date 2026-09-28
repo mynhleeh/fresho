@@ -2,43 +2,60 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  margin-top: var(--space-5);
+  margin-top: var(--space-6);
 }
 
 .sectionHead {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-3);
 }
 
 .sectionTitle {
   margin: 0;
   font-family: var(--font-family-display);
-  font-size: var(--font-size-2xl);
+  font-size: clamp(30px, 7vw, 40px);
   line-height: var(--line-height-tight);
 }
 
 .count {
-  min-width: 28px;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-gold-tint);
-  color: var(--color-gold-ink);
-  font-size: var(--font-size-sm);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
   font-weight: 700;
-  text-align: center;
+  color: var(--color-gold-deep);
+  font-variant-numeric: tabular-nums;
 }
 
-.sectionHint {
-  margin: 0;
-  color: var(--color-ink-muted);
+.sectionHint { margin: 0; max-width: 56ch; color: var(--color-ink-muted); }
+
+.list { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+.followingList { gap: 0; }
+
+.todo {
+  margin-inline: calc(var(--space-4) * -1);
+  padding: var(--space-5) var(--space-4) var(--space-6);
+  border-radius: 0 0 var(--radius-sm) 64px;
+  background: var(--color-mint);
 }
 
-.list {
-  display: grid;
-  gap: var(--space-3);
+@media (min-width: 481px) {
+  .todoList { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--space-5); }
+  .historyList { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .todo { margin-inline: 0; padding-inline: var(--space-5); border-radius: var(--radius-sm) var(--radius-sm) var(--radius-sm) 64px; }
 }
 
 @media (min-width: 900px) {
-  .list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .todo {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.5fr) minmax(0, 1.5fr);
+    column-gap: var(--space-6);
+    align-items: start;
+    align-content: start;
+  }
+
+  .todo > .sectionHead,
+  .todo > .sectionHint { grid-column: 1; }
+  .todo > .todoList,
+  .todo > button { grid-column: 2; }
+  .todo > .todoList { grid-row: 1 / span 3; }
 }

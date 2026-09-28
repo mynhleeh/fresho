@@ -1,23 +1,8 @@
-.progress {
-  display: flex;
-  gap: var(--space-1);
-}
-
-.pip {
-  flex: 1;
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--color-cream-shade);
-}
-
-.done { background: var(--color-leaf-bright); }
-.current { background: var(--color-warning); box-shadow: 0 0 0 2px var(--color-warning-bg); }
-
 .split { display: flex; flex-direction: column; gap: var(--space-2); }
 
 .splitBar {
-  height: 12px;
-  border-radius: var(--radius-pill);
+  height: 14px;
+  border-radius: var(--radius-pill) var(--radius-sm) var(--radius-pill) var(--radius-sm);
   background: var(--color-gold-tint);
   overflow: hidden;
 }
@@ -27,7 +12,7 @@
   height: 100%;
   width: var(--paid);
   background: var(--color-primary);
-  border-radius: var(--radius-pill);
+  border-radius: inherit;
   transition: width var(--duration-base) var(--ease-standard);
 }
 
@@ -40,7 +25,7 @@
 }
 
 .splitLegend dt { color: var(--color-ink-muted); }
-.splitLegend dd { margin: 0; font-weight: 700; color: var(--color-ink); }
+.splitLegend dd { margin: 0; font-weight: 700; color: var(--color-ink); font-variant-numeric: tabular-nums; }
 .splitLegend div:last-child { text-align: right; }
 
 @media (prefers-reduced-motion: reduce) {

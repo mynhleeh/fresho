@@ -1,0 +1,38 @@
+.ticket {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-4);
+  border-radius: 40px var(--radius-sm) 40px var(--radius-sm);
+  background: var(--color-kraft);
+  overflow: hidden;
+}
+
+.farmer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 calc(var(--space-4) * -1);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
+  border-radius: 0 0 48px 0;
+  background: var(--color-mint-strong);
+}
+
+
+.farmerText { display: grid; min-width: 0; }
+
+.farmerLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-leaf-dark);
+}
+
+.farmerName {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
+}
+
+.actions { padding-top: var(--space-2); }

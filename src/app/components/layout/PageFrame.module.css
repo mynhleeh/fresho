@@ -6,6 +6,10 @@
   gap: var(--space-5);
 }
 
+.roomy {
+  max-width: 1360px;
+}
+
 .wide {
   max-width: 1800px;
 }

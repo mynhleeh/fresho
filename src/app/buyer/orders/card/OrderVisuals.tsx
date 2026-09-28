@@ -1,22 +1,7 @@
 import type { CSSProperties } from 'react';
 import { formatVnd } from '../../../components/order/MoneySummaryRow';
-import { buildTimeline } from '@/lib/order/orderWorkflow';
-import { preOrderStatusInfo } from '@/lib/order/orderStatus';
 import type { OrderMoney } from '../data/orderView';
 import styles from './OrderVisuals.module.css';
-
-export function StatusProgress({ status }: { status: string }) {
-  const steps = buildTimeline(status);
-  const reachedCount = steps.filter((step) => step.state !== 'upcoming').length;
-  const label = preOrderStatusInfo(status).label;
-  return (
-    <div className={styles.progress} role="img" aria-label={`${label}, bước ${reachedCount} trên ${steps.length}`}>
-      {steps.map((step) => (
-        <span key={step.status} className={`${styles.pip} ${styles[step.state]}`} />
-      ))}
-    </div>
-  );
-}
 
 export function PaidSplitBar({ money, settled }: { money: OrderMoney; settled: boolean }) {
   const total = money.paidAmount + money.remainingAmount;

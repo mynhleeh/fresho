@@ -1,0 +1,136 @@
+.note,
+.tracking,
+.reason,
+.resolution {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-ink-muted);
+}
+
+.shipping {
+  display: grid;
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.shippingState {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.tracking {
+  font-size: var(--font-size-lg);
+  color: var(--color-ink);
+}
+
+.fee {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-3) var(--space-5) var(--space-3) var(--space-4);
+  background: var(--color-mint);
+  border-radius: var(--radius-sm) 28px var(--radius-sm) 28px;
+}
+
+.feeLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.feeAmount {
+  font-family: var(--font-family-display);
+  font-size: clamp(28px, 6vw, 40px);
+  line-height: var(--line-height-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-forest-deep);
+}
+
+.list {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dispute {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-paper);
+  border-radius: var(--radius-sm) var(--radius-lg) var(--radius-sm) var(--radius-lg);
+}
+
+.dispute:nth-child(even) {
+  margin-left: var(--space-5);
+}
+
+.disputeHead {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}
+
+.disputeStatus {
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-warning-text);
+}
+
+.reason {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-tight);
+  color: var(--color-ink);
+}
+
+.contact {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.contact dt {
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-leaf-mid);
+}
+
+.contact dd {
+  margin: var(--space-1) 0 0;
+  color: var(--color-ink);
+}
+
+.phone dd {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
+
+.address dd {
+  font-size: var(--font-size-md);
+  color: var(--color-ink-muted);
+}
+
+.contact a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+@media (min-width: 600px) {
+  .shipping { grid-template-columns: minmax(0, 1.2fr) auto; }
+  .contact { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); align-items: end; }
+}

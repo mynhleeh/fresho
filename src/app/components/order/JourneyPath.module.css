@@ -1,0 +1,105 @@
+.wrap {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.road {
+  fill: none;
+  stroke: var(--color-soil);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.006 0.024;
+  opacity: 0.75;
+}
+
+.walked {
+  fill: none;
+  stroke: var(--color-leaf-deep);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: drawRoad 900ms var(--ease-standard) 150ms forwards;
+}
+
+.done {
+  fill: var(--color-leaf-deep);
+  stroke: var(--color-paper);
+  stroke-width: 2;
+}
+
+.upcoming {
+  fill: var(--color-paper);
+  stroke: var(--color-soil);
+  stroke-width: 2;
+}
+
+.pulse {
+  fill: var(--color-gold-soft);
+  opacity: 0.8;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulseStop 2.4s ease-in-out infinite;
+}
+
+.glyph {
+  opacity: 0.95;
+}
+
+.wrap[data-stopped] .road {
+  opacity: 0.25;
+}
+
+.wrap[data-stopped] .glyph {
+  opacity: 0.4;
+}
+
+.caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.label {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.count {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-md);
+  color: var(--color-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes drawRoad {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pulseStop {
+  0%, 100% { transform: scale(0.85); opacity: 0.85; }
+  50% { transform: scale(1.15); opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walked {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .pulse {
+    animation: none;
+  }
+}

@@ -18,6 +18,7 @@ export type BuyerPreOrder = {
   batch: {
     id: string;
     cropName: string;
+    photoUrl?: string | null;
     unit: string;
     harvestDateEstimate: string;
     farmer: { id: string; name: string; trustScore: number; phone?: string | null; address?: string | null };
@@ -59,7 +60,7 @@ export function getOrderStatusInfo(order: BuyerPreOrder) {
   return preOrderDisplayInfo(order.status, order.farmerConfirmedAt != null);
 }
 
-export function getOpenAgreement(order: BuyerPreOrder): AgreementView | null {
+function getOpenAgreement(order: BuyerPreOrder): AgreementView | null {
   return order.agreements.find((agreement) => agreement.status === 'proposed') ?? null;
 }
 
@@ -67,7 +68,7 @@ export function getEstimatedShipping(order: BuyerPreOrder): number {
   return order.deliveryMethod === 'carrier' ? order.shippingFeeQuote ?? 0 : 0;
 }
 
-export function getGoodsAmount(order: BuyerPreOrder): number {
+function getGoodsAmount(order: BuyerPreOrder): number {
   return calculateGoodsAmount(order.quantity, order.pricePerUnit);
 }
 
@@ -102,7 +103,7 @@ export function getOrderMoney(order: BuyerPreOrder): OrderMoney {
   return { goodsAmount: getGoodsAmount(order), shippingFee, paidAmount, remainingAmount, isFinal: false };
 }
 
-export function isTerminalStatus(status: string): boolean {
+function isTerminalStatus(status: string): boolean {
   return status === 'settled' || status === 'rejected' || status === 'cancelled';
 }
 
@@ -123,3 +124,10 @@ export function totalRemaining(orders: BuyerPreOrder[]): number {
     .filter((order) => !isTerminalStatus(order.status))
     .reduce((sum, order) => sum + getOrderMoney(order).remainingAmount, 0);
 }
+
+export type DisputeView = { id: string; status: string; reason: string; resolutionNote: string | null; createdAt: string };
+
+export type BuyerOrderDetail = Omit<BuyerPreOrder, 'disputes'> & {
+  disputes: DisputeView[];
+  ledgerEntries: { id: string; type: string; amount: number; createdAt: string }[];
+};

@@ -10,12 +10,18 @@ const KIND_LABEL: Record<string, string> = {
   rescheduled: 'Dời ngày thu hoạch',
 };
 
-export function HarvestProgressLog({ batchId }: { batchId: string }) {
+export function HarvestProgressLog({ batchId, pollMs }: { batchId: string; pollMs?: number }) {
   const [updates, setUpdates] = useState<ProgressUpdate[]>([]);
 
   useEffect(() => {
-    fetch(`/api/batches/${batchId}/progress`).then((r) => (r.ok ? r.json() : [])).then(setUpdates);
-  }, [batchId]);
+    const load = () => fetch(`/api/batches/${batchId}/progress`).then((r) => (r.ok ? r.json() : [])).then(setUpdates).catch(() => undefined);
+    load();
+    if (!pollMs) return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') load();
+    }, pollMs);
+    return () => clearInterval(timer);
+  }, [batchId, pollMs]);
 
   if (updates.length === 0) return null;
 
