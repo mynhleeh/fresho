@@ -34,6 +34,7 @@ Use these English identifiers consistently across code, database, and API. Do no
 | Uy tín | `trust_score` | Rating accumulated per actor from completed orders |
 | Cước vận chuyển | `shipping_fee` | Always quoted separately from goods price |
 | Bàn giao | `handover` | Physical transfer event, self-pickup or carrier pickup |
+| Thỏa thuận | `order_agreement` | A proposal on one `pre_order` (final received quantity, or cancelling a deposited order with a refund amount) that takes effect only when the other party accepts |
 
 ## 4. Order Lifecycle State Machine
 
@@ -42,25 +43,31 @@ stateDiagram-v2
     [*] --> open
     open --> pending_confirmation: pre_order placed
     pending_confirmation --> negotiating: farmer requests changes
-    negotiating --> deposited: farmer confirms + deposit paid
+    negotiating --> deposited: farmer confirmed, then buyer pays deposit
     negotiating --> rejected: farmer rejects
     negotiating --> cancelled
-    pending_confirmation --> deposited: farmer confirms + deposit paid
+    pending_confirmation --> deposited: farmer confirmed, then buyer pays deposit
     pending_confirmation --> rejected: farmer rejects
     deposited --> awaiting_harvest
     awaiting_harvest --> ready_for_handover: farmer marks ready
-    ready_for_handover --> in_transit: carrier picks up
+    ready_for_handover --> in_transit: farmer hands goods to carrier
     ready_for_handover --> delivered: self-pickup completed
-    in_transit --> delivered: carrier delivers
-    delivered --> settled: buyer confirms + final payment
+    in_transit --> delivered: buyer confirms arrival
+    delivered --> settled: both parties agree on received quantity + final payment
     pending_confirmation --> cancelled
-    deposited --> cancelled
+    deposited --> cancelled: both parties agree
     cancelled --> [*]
     settled --> [*]
     rejected --> [*]
 ```
 
-`negotiating` covers the "Trao đổi" branch from docs §2a (farmer needs to align on packaging/timing before deciding): reached only from `pending_confirmation`, and resolves the same way `pending_confirmation` does (confirm/reject/cancel) — it does not add any new terminal state or bypass the deposit-before-confirm rule.
+`negotiating` covers the "Trao đổi" branch from docs §2a (farmer needs to align on packaging/timing before deciding): reached only from `pending_confirmation`, and resolves the same way `pending_confirmation` does (confirm/reject/cancel) — it does not add any new terminal state or bypass the confirm-before-deposit rule.
+
+Confirm-before-deposit: the farmer's confirmation is recorded on the `pre_order` (`farmer_confirmed_at`) and leaves `pending_confirmation`/`negotiating` unchanged; the buyer's deposit is only accepted after it and moves the order to `deposited`. A farmer who has confirmed cannot move the order to `negotiating`.
+
+Two-party agreements: settlement (buyer proposes the final received quantity, farmer accepts) and cancelling a `deposited` order (either party proposes a refund amount, the other accepts) are stored as `order_agreement` rows and never change the order by themselves. A pending proposal expires when the order changes status. Shipping in settlement is the estimated `shipping_fee` (carrier orders) or 0 (self-pickup); a surplus deposit is returned through an append-only `deposit_refund` ledger entry.
+
+Carrier orders have no logistics-partner assignment in this scope: the farmer marks `in_transit` and the buyer marks `delivered`.
 
 This is the single source of truth for order status values. Any module reading or writing order status MUST reference this exact set of states; do not introduce ad hoc statuses.
 
