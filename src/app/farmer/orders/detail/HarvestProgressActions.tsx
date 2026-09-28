@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { ActionGroup } from '../../../components/ui/ActionGroup';
 import { Button } from '../../../components/ui/Button';
 import { readApiErrorMessage } from '@/lib/apiErrorMessage';
 import styles from './harvestProgressActions.module.css';
@@ -41,20 +42,20 @@ export function HarvestProgressActions({ batchId, quantityTotal, showToast, onDo
 
   return (
     <section className={styles.box} aria-label="Cập nhật tiến độ thu hoạch">
-      <h3 className={styles.title}>Cập nhật tiến độ thu hoạch</h3>
+      <h2 className={styles.title}>Cập nhật tiến độ thu hoạch</h2>
       <p className={styles.hint}>Người mua của lô này sẽ nhận được tin nhắn cập nhật.</p>
-      <div className={styles.row}>
-        <Button variant="outline" disabled={busy} onClick={() => post({ kind: 'on_track' }, 'Đã báo đúng tiến độ')}>Đúng tiến độ</Button>
+      <ActionGroup>
+        <Button disabled={busy} onClick={() => post({ kind: 'on_track' }, 'Đã báo đúng tiến độ')}>Đúng tiến độ</Button>
         <Button variant="outline" disabled={busy} onClick={() => setMode('quantity_adjusted')}>Điều chỉnh sản lượng</Button>
         <Button variant="outline" disabled={busy} onClick={() => setMode('rescheduled')}>Dời ngày thu hoạch</Button>
-      </div>
+      </ActionGroup>
       {mode === 'quantity_adjusted' && (
         <form className={styles.form} onSubmit={(e) => { e.preventDefault(); submitQuantity(); }}>
           <label className={styles.field}>
             Tổng sản lượng mới
             <input type="number" min={1} required value={quantity} onChange={(e) => setQuantity(e.target.value)} className={styles.input} />
           </label>
-          <Button type="submit" disabled={busy}>Lưu sản lượng</Button>
+          <ActionGroup><Button type="submit" disabled={busy}>Lưu sản lượng</Button></ActionGroup>
         </form>
       )}
       {mode === 'rescheduled' && (
@@ -63,7 +64,7 @@ export function HarvestProgressActions({ batchId, quantityTotal, showToast, onDo
             Ngày thu hoạch mới
             <input type="date" required value={harvestDate} onChange={(e) => setHarvestDate(e.target.value)} className={styles.input} />
           </label>
-          <Button type="submit" disabled={busy}>Lưu ngày thu hoạch</Button>
+          <ActionGroup><Button type="submit" disabled={busy}>Lưu ngày thu hoạch</Button></ActionGroup>
         </form>
       )}
     </section>

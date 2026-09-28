@@ -1,0 +1,14 @@
+.actions {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.wait {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm) var(--radius-lg) var(--radius-sm) var(--radius-lg);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}

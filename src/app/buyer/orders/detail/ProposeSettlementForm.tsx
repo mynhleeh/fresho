@@ -1,10 +1,11 @@
 'use client';
 import { useState } from 'react';
+import { ActionGroup } from '../../../components/ui/ActionGroup';
 import { Button } from '../../../components/ui/Button';
 import { MoneySummaryRow, formatVnd } from '../../../components/order/MoneySummaryRow';
 import { calculateGoodsAmount } from '@/lib/order/orderPricing';
 import { getEstimatedShipping, sumDeposits, type BuyerPreOrder } from '../data/orderView';
-import styles from './OrderDrawer.module.css';
+import styles from './ProposeSettlementForm.module.css';
 
 type Props = { order: BuyerPreOrder; busy: boolean; onSubmit: (finalQuantity: number) => void };
 
@@ -55,7 +56,9 @@ export function ProposeSettlementForm({ order, busy, onSubmit }: Props) {
       </label>
       {problem === null && quantity !== null && <SettlementPreview order={order} quantity={quantity} />}
       {problem && <p id="settlement-problem" role="alert" className={styles.problem}>{problem}</p>}
-      <Button type="submit" loading={busy} disabled={problem !== null}>Gửi số lượng thực nhận</Button>
+      <ActionGroup>
+        <Button type="submit" loading={busy} disabled={problem !== null}>Gửi số lượng thực nhận</Button>
+      </ActionGroup>
     </form>
   );
 }

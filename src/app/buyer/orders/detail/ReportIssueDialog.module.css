@@ -31,10 +31,3 @@
   font-size: var(--font-size-sm);
   font-weight: 700;
 }
-
-.dialogActions {
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}

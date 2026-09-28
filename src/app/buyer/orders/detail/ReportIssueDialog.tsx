@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { ActionGroup } from '../../../components/ui/ActionGroup';
 import { Button } from '../../../components/ui/Button';
 import { Overlay } from '../../../components/feedback/Overlay';
 import { readApiErrorMessage } from '@/lib/apiErrorMessage';
@@ -56,10 +57,10 @@ export function ReportIssueDialog({
           />
         </label>
         {error && <p id="report-error" role="alert" className={styles.dialogError}>{error}</p>}
-        <div className={styles.dialogActions}>
-          <Button variant="outline" onClick={onClose} disabled={saving}>Quay lại</Button>
+        <ActionGroup>
           <Button onClick={submit} loading={saving}>Gửi báo cáo</Button>
-        </div>
+          <Button variant="outline" onClick={onClose} disabled={saving}>Quay lại</Button>
+        </ActionGroup>
       </div>
     </Overlay>
   );

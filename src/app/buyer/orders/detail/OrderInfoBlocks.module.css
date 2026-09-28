@@ -1,0 +1,52 @@
+.note {
+  margin: 0;
+  color: var(--color-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.contact { display: grid; gap: var(--space-1); }
+
+.contactName {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  color: var(--color-ink);
+}
+
+.contactPhone {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-gold-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.disputes {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dispute {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm) 28px var(--radius-sm) 28px;
+  background: var(--color-paper);
+}
+
+.disputeHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.date {
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}
