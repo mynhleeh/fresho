@@ -33,11 +33,11 @@ function OrderLink({ order, className, children }: { order: BuyerPreOrder; class
 function Figures({ order }: { order: BuyerPreOrder }) {
   const money = getOrderMoney(order);
   const includesShipping = !isStopped(order) && money.shippingFee > 0;
-  const amount = includesShipping ? money.goodsAmount + money.shippingFee : money.goodsAmount;
   return (
     <div className={styles.figures}>
       <span className={styles.figure}>{order.quantity.toLocaleString('vi-VN')}<small>{order.batch.unit}</small></span>
-      <span className={styles.figure}>{formatVnd(amount)}<small>{includesShipping ? 'gồm cước' : 'tiền hàng'}</small></span>
+      <span className={styles.figure}>{formatVnd(money.goodsAmount)}<small>tiền hàng</small></span>
+      {includesShipping && <span className={styles.figure}>{formatVnd(money.shippingFee)}<small>cước ước tính</small></span>}
     </div>
   );
 }
