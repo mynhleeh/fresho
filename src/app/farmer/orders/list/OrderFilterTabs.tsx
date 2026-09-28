@@ -4,7 +4,7 @@ import styles from './orderFilterTabs.module.css';
 
 export type OrderFilter = 'all' | FarmerGroup;
 
-const FILTERS: OrderFilter[] = ['all', 'needs_action', 'in_progress', 'done'];
+export const ORDER_FILTERS: OrderFilter[] = ['all', 'needs_action', 'in_progress', 'done'];
 
 type Props = {
   active: OrderFilter;
@@ -16,7 +16,7 @@ type Props = {
 export function OrderFilterTabs({ active, counts, total, onChange }: Props) {
   return (
     <div className={styles.tabs} role="group" aria-label="Lọc đơn theo nhóm">
-      {FILTERS.map((filter) => (
+      {ORDER_FILTERS.map((filter) => (
         <button
           key={filter}
           type="button"
