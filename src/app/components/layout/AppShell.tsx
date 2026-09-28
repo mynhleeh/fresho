@@ -17,6 +17,7 @@ import {
 } from '../ui/icons';
 import { ROLE_NAV_LINKS, type AppRole } from './roleNav';
 import { useCreateBatchPanel } from '../../farmer/batches/CreateBatchPanelContext';
+import { ChatbotWidget } from '../chatbot/ChatbotWidget';
 import styles from './AppShell.module.css';
 
 type Role = AppRole;
@@ -109,6 +110,7 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
         </Link>
       </nav>
       <main className={styles.content}>{children}</main>
+      {(role === 'farmer' || role === 'buyer') && <ChatbotWidget role={role} />}
     </div>
   );
 }
