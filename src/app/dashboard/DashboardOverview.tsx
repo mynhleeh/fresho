@@ -3,6 +3,7 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 import { formatVnd, orderValue, type DashboardKpi } from '@/lib/dashboardSummary';
 import { preOrderStatusInfo } from '@/lib/order/orderStatus';
 import type { DashboardOrder } from './useDashboardData';
+import { CropArt } from '../components/order/CropArt';
 import styles from './page.module.css';
 
 export function KpiRow({ kpis }: { kpis: DashboardKpi[] }) {
@@ -48,7 +49,7 @@ export function RecentOrdersTable({ orders, ordersHref }: { orders: DashboardOrd
               const status = preOrderStatusInfo(order.status);
               return (
                 <tr key={order.id}>
-                  <td data-label="Nông sản" className={styles.cropCell}>{order.batch.cropName}</td>
+                  <td data-label="Nông sản" className={styles.cropCell}><span className={styles.cropCellInner}><CropArt cropName={order.batch.cropName} photoUrl={order.batch.photoUrl} className={styles.cropThumb} />{order.batch.cropName}</span></td>
                   <td data-label="Số lượng" className={styles.numericCell}>{order.quantity.toLocaleString('vi-VN')} {order.batch.unit}</td>
                   <td data-label="Giá trị đặt" className={styles.numericCell}>{formatVnd(orderValue(order))}</td>
                   <td data-label="Ngày thu">{formatHarvestDate(order.batch.harvestDateEstimate)}</td>

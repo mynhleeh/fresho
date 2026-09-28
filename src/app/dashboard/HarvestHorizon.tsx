@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { HorizonDay } from '@/lib/dashboardSummary';
+import { CropArt } from '../components/order/CropArt';
 import styles from './page.module.css';
 
 const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
@@ -53,6 +54,7 @@ export function HarvestHorizon({ days, laterCount, entryNoun }: HarvestHorizonPr
               <ul className={styles.agendaEntries}>
                 {day.entries.map((entry) => (
                   <li key={entry.id} className={styles.agendaEntry}>
+                    <CropArt cropName={entry.cropName} photoUrl={entry.photoUrl} className={styles.cropThumb} />
                     <span className={styles.agendaCrop}>{entry.cropName}</span>
                     <span className={styles.agendaDetail}>{entry.detail}</span>
                   </li>

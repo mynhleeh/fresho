@@ -22,7 +22,7 @@ export function countOrdersByStage(orders: { status: string }[]): { stages: Orde
   return { stages, closedCount };
 }
 
-export type HorizonEntry = { id: string; cropName: string; harvestDate: string | Date; detail: string };
+export type HorizonEntry = { id: string; cropName: string; harvestDate: string | Date; detail: string; photoUrl?: string | null };
 
 export type HorizonDay = { dateKey: string; date: Date; isToday: boolean; isWeekend: boolean; entries: HorizonEntry[] };
 
