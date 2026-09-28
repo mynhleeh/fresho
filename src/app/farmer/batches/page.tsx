@@ -1,18 +1,71 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AppShell } from '../../components/layout/AppShell';
 import { Button } from '../../components/ui/Button';
 import { Overlay } from '../../components/feedback/Overlay';
 import { PageFrame } from '../../components/layout/PageFrame';
-import { PageHeader } from '../../components/layout/PageHeader';
 import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
-import { EmptyState, ErrorState, LoadingSkeleton } from '../../components/feedback/StateBlock';
+import { ErrorState, LoadingSkeleton } from '../../components/feedback/StateBlock';
 import { useApiList } from '../../components/feedback/useApiList';
 import { readApiErrorMessage } from '@/lib/apiErrorMessage';
 import { BatchCard } from './BatchCard';
+import { EmptyFieldArt, FarmScheduleArt } from './FarmScheduleArt';
 import { useCreateBatchPanel } from './CreateBatchPanelContext';
 import { HarvestBatchForm, type EditableBatch } from './HarvestBatchForm';
 import styles from './page.module.css';
+
+function batchesSummary(batches: EditableBatch[]) {
+  const openCount = batches.filter((batch) => batch.status === 'open').length;
+  const totalBooked = batches.reduce((sum, batch) => sum + (batch.quantityTotal - batch.quantityAvailable), 0);
+  const totalCapacity = batches.reduce((sum, batch) => sum + batch.quantityTotal, 0);
+  const bookedPercent = totalCapacity > 0 ? Math.round((totalBooked / totalCapacity) * 100) : 0;
+  return { openCount, bookedPercent };
+}
+
+function FarmerBatchesHeader({ onOpenCreate }: { onOpenCreate: () => void }) {
+  return (
+    <div className={styles.headerBand}>
+      <FarmScheduleArt />
+      <div className={styles.headerContent}>
+        <span className={styles.eyebrow}>Nông dân</span>
+        <h1 className={styles.title}>Mùa vụ của tôi</h1>
+        <p className={styles.description}>Đăng đợt thu hoạch sắp tới để người mua chủ động đặt trước.</p>
+      </div>
+      <Button className={styles.headerAction} onClick={onOpenCreate}>+ Đăng mùa vụ</Button>
+    </div>
+  );
+}
+
+function BatchesStatBand({ batches }: { batches: EditableBatch[] }) {
+  const { openCount, bookedPercent } = useMemo(() => batchesSummary(batches), [batches]);
+  return (
+    <div className={styles.statBand}>
+      <div className={styles.statTile}>
+        <span className={styles.statValue}>{openCount}</span>
+        <span className={styles.statLabel}>lô đang mở đặt trước</span>
+      </div>
+      <div className={styles.statTile}>
+        <span className={styles.statValue}>{bookedPercent}%</span>
+        <span className={styles.statLabel}>tổng sản lượng đã được đặt</span>
+      </div>
+      <div className={styles.statTile}>
+        <span className={styles.statValue}>{batches.length}</span>
+        <span className={styles.statLabel}>tổng số mùa vụ đã đăng</span>
+      </div>
+    </div>
+  );
+}
+
+function EmptyBatchesState({ onOpenCreate }: { onOpenCreate: () => void }) {
+  return (
+    <div className={styles.emptyBand}>
+      <EmptyFieldArt />
+      <p className={styles.emptyTitle}>Bạn chưa đăng mùa vụ nào</p>
+      <p className={styles.emptyHint}>Đăng mùa vụ 7–14 ngày trước ngày thu hoạch để người mua đặt trước.</p>
+      <Button onClick={onOpenCreate}>+ Đăng mùa vụ đầu tiên</Button>
+    </div>
+  );
+}
 
 export default function FarmerBatches() {
   const createBatchPanel = useCreateBatchPanel();
@@ -52,22 +105,12 @@ export default function FarmerBatches() {
   return (
     <AppShell role="farmer">
       <PageFrame>
-        <PageHeader
-          eyebrow="Nông dân"
-          title="Mùa vụ của tôi"
-          description="Đăng đợt thu hoạch sắp tới để người mua chủ động đặt trước."
-          actions={<Button onClick={createBatchPanel.open}>+ Đăng mùa vụ</Button>}
-        />
+        <FarmerBatchesHeader onOpenCreate={createBatchPanel.open} />
         {actionError && <p role="alert" className={styles.actionError}>{actionError}</p>}
         {state.status === 'loading' && <LoadingSkeleton />}
         {state.status === 'error' && <ErrorState message={state.message} onRetry={reload} />}
-        {state.status === 'ready' && batches.length === 0 && (
-          <EmptyState
-            title="Bạn chưa đăng mùa vụ nào"
-            hint="Đăng mùa vụ 7–14 ngày trước ngày thu hoạch để người mua đặt trước."
-            action={<Button onClick={createBatchPanel.open}>+ Đăng mùa vụ đầu tiên</Button>}
-          />
-        )}
+        {state.status === 'ready' && batches.length === 0 && <EmptyBatchesState onOpenCreate={createBatchPanel.open} />}
+        {batches.length > 0 && <BatchesStatBand batches={batches} />}
         {batches.length > 0 && (
           <div className={styles.cardGrid}>
             {batches.map((batch) => (

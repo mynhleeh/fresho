@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -18,6 +18,7 @@ export type Batch = {
   status: string;
   photoUrl: string | null;
   isHidden?: boolean;
+  harvestDateEstimate?: string;
 };
 
 const PLACEHOLDER_ICONS = {
@@ -28,6 +29,18 @@ const PLACEHOLDER_ICONS = {
   basket: BasketIcon,
 } as const;
 
+const harvestDateFormat = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' });
+
+function ThumbnailPlaceholder({ batch, dimmedClass }: { batch: Batch; dimmedClass: string }) {
+  const { icon, backgroundColor } = deriveBatchPlaceholder(batch.id);
+  const Icon = PLACEHOLDER_ICONS[icon];
+  return (
+    <div className={`${styles.placeholder} ${dimmedClass}`} style={{ backgroundColor }}>
+      <Icon className={styles.placeholderIcon} />
+    </div>
+  );
+}
+
 function BatchThumbnail({ batch }: { batch: Batch }) {
   const status = batchStatusInfo(batch.status);
   const dimmedClass = batch.isHidden ? styles.dimmed : '';
@@ -36,7 +49,7 @@ function BatchThumbnail({ batch }: { batch: Batch }) {
   return (
     <div className={styles.thumbnailFrame}>
       {batch.photoUrl && batch.photoUrl !== failedUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={batch.photoUrl}
           alt={batch.cropName}
@@ -50,6 +63,7 @@ function BatchThumbnail({ batch }: { batch: Batch }) {
       ) : (
         <ThumbnailPlaceholder batch={batch} dimmedClass={dimmedClass} />
       )}
+      <div className={styles.thumbnailScrim} />
       <div className={styles.statusStrip}>
         <StatusBadge label={status.label} tone={status.tone} />
         {batch.isHidden && <StatusBadge label="Đã ẩn khỏi người mua" tone="neutral" />}
@@ -58,19 +72,46 @@ function BatchThumbnail({ batch }: { batch: Batch }) {
   );
 }
 
-function ThumbnailPlaceholder({ batch, dimmedClass }: { batch: Batch; dimmedClass: string }) {
-  const { icon, backgroundColor } = deriveBatchPlaceholder(batch.id);
-  const Icon = PLACEHOLDER_ICONS[icon];
+function BookedProgress({ batch }: { batch: Batch }) {
+  const bookedRatio = batch.quantityTotal > 0 ? (batch.quantityTotal - batch.quantityAvailable) / batch.quantityTotal : 0;
+  const bookedPercent = Math.round(bookedRatio * 100);
   return (
-    <div className={`${styles.placeholder} ${dimmedClass}`} style={{ backgroundColor }}>
-      <Icon className={styles.placeholderIcon} />
+    <div className={styles.progress}>
+      <div className={styles.progressLabels}>
+        <span>Đã đặt {bookedPercent}%</span>
+        <span className={styles.progressRemaining}>Còn {batch.quantityAvailable.toLocaleString('vi-VN')} {batch.unit}</span>
+      </div>
+      <div className={styles.progressTrack} role="img" aria-label={`Đã đặt trước ${bookedPercent}% sản lượng`}>
+        <span className={styles.progressFill} style={{ '--booked-ratio': bookedRatio } as CSSProperties} />
+      </div>
     </div>
   );
 }
 
-// True when a different batch's edit panel is open, so this card should recede
-// into a low-detail gray frame rather than compete visually with the focused one.
-// Distinct from Batch.isHidden, which is the buyer-facing public visibility toggle.
+function useDaysUntil(targetDate: string): number {
+  const [daysLeft, setDaysLeft] = useState(0);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDaysLeft(Math.ceil((new Date(targetDate).getTime() - Date.now()) / 86400000));
+  }, [targetDate]);
+  return daysLeft;
+}
+
+function HarvestTimeline({ harvestDateEstimate }: { harvestDateEstimate: string }) {
+  const daysLeft = useDaysUntil(harvestDateEstimate);
+  const stageIndex = daysLeft <= 0 ? 2 : daysLeft <= 7 ? 1 : 0;
+  return (
+    <div className={styles.timeline} aria-hidden="true">
+      {['Đăng lô', 'Gần thu hoạch', 'Thu hoạch'].map((stage, index) => (
+        <span key={stage} className={`${styles.timelineDot} ${index <= stageIndex ? styles.timelineDotActive : ''}`} />
+      ))}
+      <span className={styles.timelineLabel}>
+        {daysLeft > 0 ? `Còn ${daysLeft} ngày · ${harvestDateFormat.format(new Date(harvestDateEstimate))}` : `Thu hoạch ${harvestDateFormat.format(new Date(harvestDateEstimate))}`}
+      </span>
+    </div>
+  );
+}
+
 export function BatchCard(props: {
   batch: Batch;
   onEdit?: () => void;
@@ -78,7 +119,6 @@ export function BatchCard(props: {
   isEditFocusElsewhere?: boolean;
 }) {
   const { batch } = props;
-  const hasActions = props.onEdit || props.onToggleHidden;
 
   if (props.isEditFocusElsewhere) {
     return (
@@ -87,8 +127,17 @@ export function BatchCard(props: {
           <div className={styles.skeletonThumbnail} />
         </div>
         <div className={styles.body}>
-          <div className={styles.skeletonLine} style={{ width: '70%' }} />
-          <div className={styles.skeletonLine} style={{ width: '45%' }} />
+          <div className={styles.titleRow}>
+            <span className={styles.skeletonLine} style={{ width: '70%' }} />
+          </div>
+          <div className={styles.progress}>
+            <span className={styles.skeletonLine} style={{ width: '45%' }} />
+            <span className={styles.skeletonTrack} />
+          </div>
+          <div className={styles.timelineSlot}>
+            <span className={styles.skeletonLine} style={{ width: '55%' }} />
+          </div>
+          <div className={styles.actions} />
         </div>
       </Card>
     );
@@ -98,20 +147,22 @@ export function BatchCard(props: {
     <Card className={styles.card}>
       <BatchThumbnail batch={batch} />
       <div className={styles.body}>
-        <div className={styles.name}>{batch.cropName}</div>
-        <div className={styles.meta}>
-          Còn lại {batch.quantityAvailable.toLocaleString('vi-VN')}/{batch.quantityTotal.toLocaleString('vi-VN')} {batch.unit} · {formatVnd(batch.pricePerUnit)}/{batch.unit}
+        <div className={styles.titleRow}>
+          <span className={styles.name}>{batch.cropName}</span>
+          <span className={styles.price}>{formatVnd(batch.pricePerUnit)}<span className={styles.priceUnit}>/{batch.unit}</span></span>
         </div>
-        {hasActions && (
-          <div className={styles.actions}>
-            {props.onEdit && <Button variant="outline" onClick={props.onEdit}>Chỉnh sửa</Button>}
-            {props.onToggleHidden && (
-              <Button variant="outline" onClick={props.onToggleHidden}>
-                {batch.isHidden ? 'Hiện' : 'Ẩn'}
-              </Button>
-            )}
-          </div>
-        )}
+        <BookedProgress batch={batch} />
+        <div className={styles.timelineSlot}>
+          {batch.harvestDateEstimate && <HarvestTimeline harvestDateEstimate={batch.harvestDateEstimate} />}
+        </div>
+        <div className={styles.actions}>
+          {props.onEdit && <Button variant="outline" onClick={props.onEdit}>Chỉnh sửa</Button>}
+          {props.onToggleHidden && (
+            <Button variant="outline" onClick={props.onToggleHidden}>
+              {batch.isHidden ? 'Hiện' : 'Ẩn'}
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );
