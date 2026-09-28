@@ -27,7 +27,7 @@ function toAccountProfile(user: {
 
 export async function getAccount(userId: string): Promise<AccountProfile> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw new ApiError('not_found', 'account not found', 404);
+  if (!user) throw new ApiError('not_found', 'Không tìm thấy tài khoản.', 404);
   return toAccountProfile(user);
 }
 
@@ -35,12 +35,12 @@ export async function updateAccountProfile(
   userId: string,
   input: { name: string; phone: string },
 ): Promise<AccountProfile> {
-  if (!input.name?.trim()) throw new ApiError('invalid_input', 'invalid_input: name is required', 400);
-  if (!input.phone?.trim()) throw new ApiError('invalid_input', 'invalid_input: phone is required', 400);
+  if (!input.name?.trim()) throw new ApiError('invalid_input', 'Cần nhập họ tên.', 400);
+  if (!input.phone?.trim()) throw new ApiError('invalid_input', 'Cần nhập số điện thoại.', 400);
 
   const existingWithPhone = await prisma.user.findUnique({ where: { phone: input.phone } });
   if (existingWithPhone && existingWithPhone.id !== userId) {
-    throw new ApiError('phone_already_registered', 'phone_already_registered', 409);
+    throw new ApiError('phone_already_registered', 'Số điện thoại này đã được đăng ký.', 409);
   }
 
   const user = await prisma.user.update({
@@ -56,16 +56,16 @@ export async function changeAccountPassword(
   userId: string,
   input: { currentPassword: string; newPassword: string },
 ): Promise<void> {
-  if (!input.currentPassword) throw new ApiError('invalid_input', 'invalid_input: current password is required', 400);
+  if (!input.currentPassword) throw new ApiError('invalid_input', 'Cần nhập mật khẩu hiện tại.', 400);
   if (!input.newPassword || input.newPassword.length < MIN_PASSWORD_LENGTH) {
-    throw new ApiError('invalid_input', `invalid_input: password must be at least ${MIN_PASSWORD_LENGTH} characters`, 400);
+    throw new ApiError('invalid_input', `Mật khẩu phải có ít nhất ${MIN_PASSWORD_LENGTH} ký tự.`, 400);
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw new ApiError('not_found', 'account not found', 404);
+  if (!user) throw new ApiError('not_found', 'Không tìm thấy tài khoản.', 404);
 
   const currentPasswordMatches = await bcrypt.compare(input.currentPassword, user.passwordHash);
-  if (!currentPasswordMatches) throw new ApiError('invalid_credentials', 'current password is incorrect', 401);
+  if (!currentPasswordMatches) throw new ApiError('invalid_credentials', 'Mật khẩu hiện tại chưa đúng.', 401);
 
   const passwordHash = await bcrypt.hash(input.newPassword, BCRYPT_SALT_ROUNDS);
   await prisma.user.update({ where: { id: userId }, data: { passwordHash } });

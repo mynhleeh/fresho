@@ -10,19 +10,19 @@ function isValidScore(value: unknown): value is number {
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getCurrentUser(request);
-    if (!user) throw new ApiError('forbidden', 'Login required', 403);
+    if (!user) throw new ApiError('forbidden', 'Vui lòng đăng nhập.', 403);
 
     const { id } = await params;
     const preOrder = await prisma.preOrder.findUnique({ where: { id }, include: { batch: true } });
-    if (!preOrder) throw new ApiError('pre_order_not_found', 'Pre-order not found', 404);
+    if (!preOrder) throw new ApiError('pre_order_not_found', 'Không tìm thấy đơn đặt trước.', 404);
 
     const isBuyer = preOrder.buyerId === user.id;
     const isFarmer = preOrder.batch.farmerId === user.id;
-    if (!isBuyer && !isFarmer) throw new ApiError('forbidden', 'Not a party to this pre_order', 403);
+    if (!isBuyer && !isFarmer) throw new ApiError('forbidden', 'Bạn không phải một bên của đơn hàng này.', 403);
 
     const { qualityScore, timelinessScore, commitmentScore } = await request.json();
     if (!isValidScore(qualityScore) || !isValidScore(timelinessScore) || !isValidScore(commitmentScore)) {
-      throw new ApiError('invalid_input', 'Scores must be integers from 1 to 5', 400);
+      throw new ApiError('invalid_input', 'Điểm đánh giá phải là số nguyên từ 1 đến 5.', 400);
     }
 
     const rateeId = isBuyer ? preOrder.batch.farmerId : preOrder.buyerId;

@@ -1,0 +1,158 @@
+.strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  padding: 0 0 var(--space-4);
+  min-height: 44px;
+  border: 2px solid var(--bd-line);
+  border-radius: var(--radius-md);
+  background: var(--bd-paper);
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.option:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.option:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.optionSelected {
+  border-color: var(--color-primary);
+  background: linear-gradient(180deg, var(--color-paper) 0%, var(--color-primary-light) 100%);
+  box-shadow: var(--shadow-card);
+}
+
+.art {
+  display: block;
+  aspect-ratio: 200 / 96;
+  overflow: hidden;
+  filter: saturate(0.7);
+  transition: filter var(--transition-base);
+}
+
+.optionSelected .art {
+  filter: none;
+}
+
+.artSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.optionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 var(--space-4);
+}
+
+.optionLabel {
+  font-family: var(--bd-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.optionDescription {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--bd-muted);
+}
+
+.check {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--transition-base), transform var(--transition-base);
+}
+
+.optionSelected .check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (max-width: 640px) {
+  .strip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .option {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0 var(--space-3) 0 0;
+  }
+
+  .art {
+    flex: 0 0 38%;
+    align-self: stretch;
+    aspect-ratio: auto;
+    min-height: 84px;
+  }
+
+  .artSvg {
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .optionBody {
+    padding: var(--space-2) 0;
+  }
+
+  .optionLabel {
+    font-size: 17px;
+  }
+
+  .optionDescription {
+    font-size: 12px;
+  }
+
+  .check {
+    top: var(--space-2);
+    right: var(--space-2);
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option,
+  .art,
+  .check {
+    transition: none;
+  }
+
+  .option:hover {
+    transform: none;
+  }
+}

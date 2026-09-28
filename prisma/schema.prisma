@@ -122,9 +122,11 @@ model PreOrder {
   deliveryMethod   String         @default("self_pickup") @map("delivery_method")
   shippingFeeQuote Int?           @map("shipping_fee_quote")
   status           String         @default("pending_confirmation")
+  farmerConfirmedAt DateTime?     @map("farmer_confirmed_at")
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
 
+  agreements    OrderAgreement[]
   deposits      Deposit[]
   settlement    Settlement?
   ledgerEntries LedgerEntry[]
@@ -134,6 +136,22 @@ model PreOrder {
   ratings       Rating[]
 
   @@map("pre_orders")
+}
+
+model OrderAgreement {
+  id            String    @id @default(cuid())
+  preOrderId    String    @map("pre_order_id")
+  preOrder      PreOrder  @relation(fields: [preOrderId], references: [id])
+  kind          String
+  proposedById  String    @map("proposed_by_id")
+  respondedById String?   @map("responded_by_id")
+  finalQuantity Int?      @map("final_quantity")
+  refundAmount  Int?      @map("refund_amount")
+  status        String    @default("proposed")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  respondedAt   DateTime? @map("responded_at")
+
+  @@map("order_agreements")
 }
 
 model ShippingQuote {
@@ -170,6 +188,7 @@ model Deposit {
   status     String   @default("paid")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  @@unique([preOrderId])
   @@map("deposits")
 }
 

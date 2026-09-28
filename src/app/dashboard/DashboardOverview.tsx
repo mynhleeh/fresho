@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { StatusBadge } from '../components/StatusBadge';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { formatVnd, orderValue, type DashboardKpi } from '@/lib/dashboardSummary';
-import { preOrderStatusInfo } from '@/lib/orderStatus';
+import { preOrderStatusInfo } from '@/lib/order/orderStatus';
 import type { DashboardOrder } from './useDashboardData';
 import styles from './page.module.css';
 

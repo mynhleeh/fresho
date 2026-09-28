@@ -32,7 +32,7 @@ describe('submitRating', () => {
 
     await expect(
       submitRating(preOrder.id, buyer.id, farmer.id, { qualityScore: 5, timelinessScore: 5, commitmentScore: 5 }),
-    ).rejects.toThrow('invalid_state');
+    ).rejects.toMatchObject({ code: 'invalid_state' });
   });
 
   it('rejects a second rating from the same rater on the same pre_order', async () => {
@@ -41,7 +41,7 @@ describe('submitRating', () => {
 
     await expect(
       submitRating(preOrder.id, buyer.id, farmer.id, { qualityScore: 4, timelinessScore: 4, commitmentScore: 4 }),
-    ).rejects.toThrow('already_rated');
+    ).rejects.toMatchObject({ code: 'already_rated' });
   });
 
   it('recomputes trust_score as the unweighted mean of a user’s received ratings', async () => {

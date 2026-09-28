@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { displayFont } from './components/displayFont';
+import { displayFont } from './components/layout/displayFont';
 import { LandingNav } from './landing/LandingNav';
 import { HeroScene } from './landing/HeroScene';
 import { AudienceSection, ProcessSection, ProduceMarquee } from './landing/LandingSections';

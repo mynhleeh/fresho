@@ -5,7 +5,7 @@ import { ApiError, errorResponse } from '@/lib/errors';
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getCurrentUser(request);
-    if (!user) throw new ApiError('forbidden', 'Login required', 403);
+    if (!user) throw new ApiError('forbidden', 'Vui lòng đăng nhập.', 403);
 
     const { id } = await params;
     const messages = await listMessages(id, user);
@@ -18,7 +18,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getCurrentUser(request);
-    if (!user) throw new ApiError('forbidden', 'Login required', 403);
+    if (!user) throw new ApiError('forbidden', 'Vui lòng đăng nhập.', 403);
 
     const { id } = await params;
     const { body } = await request.json();

@@ -1,9 +1,10 @@
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { formatVnd } from '../../components/MoneySummaryRow';
-import { batchStatusInfo } from '@/lib/orderStatus';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { formatVnd } from '../../components/order/MoneySummaryRow';
+import { batchStatusInfo } from '@/lib/order/orderStatus';
 import { deriveBatchPlaceholder } from '@/lib/batchPlaceholder';
-import { VegetableIcon, FruitIcon, GrainIcon, LeafIcon, BasketIcon } from '../../components/icons';
+import { VegetableIcon, FruitIcon, GrainIcon, LeafIcon, BasketIcon } from '../../components/ui/icons';
 import styles from './BatchCard.module.css';
 
 export type Batch = {
@@ -26,14 +27,9 @@ const PLACEHOLDER_ICONS = {
   basket: BasketIcon,
 } as const;
 
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 function BatchThumbnail({ batch }: { batch: Batch }) {
   const status = batchStatusInfo(batch.status);
   const dimmedClass = batch.isHidden ? styles.dimmed : '';
-  const stripToneClass = styles[`strip${capitalize(status.tone)}`];
 
   return (
     <div className={styles.thumbnailFrame}>
@@ -43,7 +39,10 @@ function BatchThumbnail({ batch }: { batch: Batch }) {
       ) : (
         <ThumbnailPlaceholder batch={batch} dimmedClass={dimmedClass} />
       )}
-      <div className={`${styles.statusStrip} ${stripToneClass}`}>{status.label}</div>
+      <div className={styles.statusStrip}>
+        <StatusBadge label={status.label} tone={status.tone} />
+        {batch.isHidden && <StatusBadge label="Đã ẩn khỏi người mua" tone="neutral" />}
+      </div>
     </div>
   );
 }
@@ -90,7 +89,7 @@ export function BatchCard(props: {
       <div className={styles.body}>
         <div className={styles.name}>{batch.cropName}</div>
         <div className={styles.meta}>
-          Còn lại {batch.quantityAvailable}/{batch.quantityTotal} {batch.unit} · {formatVnd(batch.pricePerUnit)}/{batch.unit}
+          Còn lại {batch.quantityAvailable.toLocaleString('vi-VN')}/{batch.quantityTotal.toLocaleString('vi-VN')} {batch.unit} · {formatVnd(batch.pricePerUnit)}/{batch.unit}
         </div>
         {hasActions && (
           <div className={styles.actions}>

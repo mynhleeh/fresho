@@ -1,14 +1,16 @@
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { formatVnd } from '../../components/MoneySummaryRow';
+import { ButtonLink } from '../../components/ui/ButtonLink';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { formatVnd } from '../../components/order/MoneySummaryRow';
 import { deriveBatchPlaceholder } from '@/lib/batchPlaceholder';
-import { VegetableIcon, FruitIcon, GrainIcon, LeafIcon, BasketIcon, BookmarkIcon, TrustScoreIcon, UserCircleIcon } from '../../components/icons';
+import { VegetableIcon, FruitIcon, GrainIcon, LeafIcon, BasketIcon, BookmarkIcon, TrustScoreIcon, UserCircleIcon } from '../../components/ui/icons';
 import styles from './BuyerBatchCard.module.css';
 
 export type BuyerBatch = {
   id: string;
   cropName: string;
   quantityAvailable: number;
+  quantityTotal: number;
   unit: string;
   pricePerUnit: number;
   location: string;
@@ -16,6 +18,7 @@ export type BuyerBatch = {
   minOrderQuantity: number;
   harvestDateEstimate: string;
   photoUrl: string | null;
+  description: string | null;
   farmer: { name: string; avatarUrl: string | null; trustScore: number };
 };
 
@@ -59,8 +62,6 @@ export function BuyerBatchCard(props: {
   batch: BuyerBatch;
   isSaved: boolean;
   isCompared: boolean;
-  isSelected: boolean;
-  onSelect: () => void;
   onToggleSave: () => void;
   onToggleCompare: () => void;
   onMessage: () => void;
@@ -68,7 +69,7 @@ export function BuyerBatchCard(props: {
   const { batch } = props;
 
   return (
-    <Card className={`${styles.card} ${props.isSelected ? styles.selected : ''}`}>
+    <Card className={styles.card}>
       <div className={styles.thumbnailFrame}>
         <BatchThumbnail batch={batch} />
       </div>
@@ -107,9 +108,7 @@ export function BuyerBatchCard(props: {
         </div>
 
         <div className={styles.actions}>
-          <Button variant={props.isSelected ? 'primary' : 'outline'} onClick={props.onSelect}>
-            Xem lô hàng
-          </Button>
+          <ButtonLink href={`/buyer/marketplace/${batch.id}`} className={styles.viewLink}>Xem lô hàng</ButtonLink>
           <Button variant="outline" onClick={props.onToggleSave}>
             <BookmarkIcon className={styles.actionIcon} />
             {props.isSaved ? 'Đã lưu' : 'Lưu lô'}

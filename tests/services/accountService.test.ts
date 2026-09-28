@@ -33,7 +33,7 @@ describe('changeAccountPassword', () => {
 
     await expect(
       changeAccountPassword(user.id, { currentPassword: 'wrongpass', newPassword: 'newpass1' }),
-    ).rejects.toThrow('current password is incorrect');
+    ).rejects.toMatchObject({ code: 'invalid_credentials' });
 
     const unchanged = await prisma.user.findUnique({ where: { id: user.id } });
     expect(await bcrypt.compare('oldpass1', unchanged!.passwordHash)).toBe(true);
@@ -44,7 +44,7 @@ describe('changeAccountPassword', () => {
 
     await expect(
       changeAccountPassword(user.id, { currentPassword: 'oldpass1', newPassword: '123' }),
-    ).rejects.toThrow('password must be at least');
+    ).rejects.toMatchObject({ code: 'invalid_input' });
   });
 });
 
@@ -70,8 +70,8 @@ describe('updateAccountProfile', () => {
     const { user: a } = await seedUser({ phone: '111' });
     await seedUser({ phone: '222' });
 
-    await expect(updateAccountProfile(a.id, { name: 'A', phone: '222' })).rejects.toThrow(
-      'phone_already_registered',
-    );
+    await expect(updateAccountProfile(a.id, { name: 'A', phone: '222' })).rejects.toMatchObject({
+      code: 'phone_already_registered',
+    });
   });
 });

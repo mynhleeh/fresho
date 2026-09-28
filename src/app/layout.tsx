@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
+import { displayFont } from "./components/layout/displayFont";
 import { RegisterServiceWorker } from "./register-sw";
 import { AuthProvider } from "./auth/AuthContext";
 import { CreateBatchPanelProvider } from "./farmer/batches/CreateBatchPanelContext";
@@ -24,7 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="vi" className={appSans.variable}>
+    <html lang="vi" className={`${appSans.variable} ${displayFont.variable}`}>
       <body>
         <AuthProvider>
           <CreateBatchPanelProvider>

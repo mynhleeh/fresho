@@ -1,6 +1,6 @@
 'use client';
 import { useRef } from 'react';
-import { CameraIcon } from '../../components/icons';
+import { CameraIcon } from '../../components/ui/icons';
 import styles from './BatchPhotoGallery.module.css';
 
 export type GalleryPhoto = {

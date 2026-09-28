@@ -12,13 +12,13 @@ function scaleToTrustScore(average: number): number {
 
 export async function submitRating(preOrderId: string, raterId: string, rateeId: string, input: RatingInput) {
   const preOrder = await prisma.preOrder.findUnique({ where: { id: preOrderId } });
-  if (!preOrder) throw new ApiError('pre_order_not_found', 'Pre-order not found', 404);
+  if (!preOrder) throw new ApiError('pre_order_not_found', 'Không tìm thấy đơn đặt trước.', 404);
   if (preOrder.status !== 'settled') {
-    throw new ApiError('invalid_state', 'invalid_state: can only rate a settled pre_order', 400);
+    throw new ApiError('invalid_state', 'Chỉ đánh giá được đơn đã hoàn tất.', 400);
   }
 
   const existing = await prisma.rating.findUnique({ where: { preOrderId_raterId: { preOrderId, raterId } } });
-  if (existing) throw new ApiError('already_rated', 'already_rated: you already rated this order', 400);
+  if (existing) throw new ApiError('already_rated', 'Bạn đã đánh giá đơn này rồi.', 400);
 
   const rating = await prisma.rating.create({
     data: { preOrderId, raterId, rateeId, ...input },

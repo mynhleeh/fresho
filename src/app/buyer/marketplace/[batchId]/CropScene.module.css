@@ -1,0 +1,43 @@
+.scene {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.sunGlow {
+  transform-origin: 430px 120px;
+  animation: sunGlow 6s ease-in-out infinite;
+}
+
+.sprout {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sproutSway 4.5s ease-in-out infinite;
+}
+
+.cloud {
+  animation: cloudDrift 18s ease-in-out infinite alternate;
+}
+
+@keyframes sunGlow {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes sproutSway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes cloudDrift {
+  from { transform: translateX(-14px); }
+  to { transform: translateX(20px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sunGlow,
+  .sprout,
+  .cloud {
+    animation: none;
+  }
+}

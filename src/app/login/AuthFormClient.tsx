@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '../components/Button';
+import { Button } from '../components/ui/Button';
+import { readApiErrorMessage } from '@/lib/apiErrorMessage';
 import { useAuth } from '../auth/AuthContext';
 import { ROLE_LABELS } from '../auth/roleLabels';
 import styles from './AuthFormClient.module.css';
@@ -27,27 +28,30 @@ export default function AuthFormClient() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  async function submit() {
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
     setError(null);
 
     if (mode === 'signup' && password !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp');
+      setError('Mật khẩu xác nhận chưa khớp. Hãy nhập lại cho giống mật khẩu ở ô trên.');
       return;
     }
 
     const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
     const body = mode === 'login' ? { phone, password } : { name, phone, address, role, password };
 
+    setSubmitting(true);
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    });
+    }).catch(() => null);
 
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.message ?? 'Đã xảy ra lỗi');
+    if (!res || !res.ok) {
+      setSubmitting(false);
+      setError(res ? await readApiErrorMessage(res) : 'Không kết nối được máy chủ. Hãy kiểm tra mạng rồi thử lại.');
       return;
     }
 
@@ -58,9 +62,11 @@ export default function AuthFormClient() {
 
   return (
     <div>
-      <div className={styles.tabs}>
+      <div className={styles.tabs} role="tablist" aria-label="Chọn đăng nhập hoặc đăng ký">
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === 'login'}
           className={`${styles.tab} ${mode === 'login' ? styles.tabActive : ''}`}
           onClick={() => setMode('login')}
         >
@@ -68,6 +74,8 @@ export default function AuthFormClient() {
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === 'signup'}
           className={`${styles.tab} ${mode === 'signup' ? styles.tabActive : ''}`}
           onClick={() => setMode('signup')}
         >
@@ -75,7 +83,7 @@ export default function AuthFormClient() {
         </button>
       </div>
 
-      <div className={styles.form}>
+      <form className={styles.form} onSubmit={submit}>
         {mode === 'signup' && (
           <label>
             Họ tên
@@ -84,11 +92,11 @@ export default function AuthFormClient() {
         )}
         <label>
           Số điện thoại
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </label>
         <label>
           Mật khẩu
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         {mode === 'signup' && (
           <>
@@ -110,11 +118,11 @@ export default function AuthFormClient() {
             </label>
           </>
         )}
-        {error && <span className={styles.error}>{error}</span>}
-        <Button type="button" onClick={submit}>
+        {error && <span role="alert" className={styles.error}>{error}</span>}
+        <Button type="submit" loading={submitting}>
           {mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}
         </Button>
-      </div>
+      </form>
     </div>
   );
 }

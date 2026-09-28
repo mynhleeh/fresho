@@ -272,11 +272,10 @@
 }
 
 .input:hover:not(:read-only) {
-  border-color: #c9c6b6;
+  border-color: var(--color-border-strong);
 }
 
 .input:focus-visible {
-  outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px var(--color-primary-light);
 }
@@ -324,7 +323,7 @@
   margin-top: auto;
   padding: var(--space-4) 28px;
   border-top: 1px solid var(--color-border);
-  background: #fbfaf5;
+  background: var(--color-paper-soft);
 }
 
 .footerActions {

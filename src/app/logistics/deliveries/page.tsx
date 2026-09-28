@@ -1,82 +1,140 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { AppShell } from '../../components/AppShell';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { StatusBadge } from '../../components/StatusBadge';
-import { preOrderStatusInfo } from '@/lib/orderStatus';
+import { useState } from 'react';
+import { AppShell } from '../../components/layout/AppShell';
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { PageFrame } from '../../components/layout/PageFrame';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
+import { EmptyState, ErrorState, LoadingSkeleton } from '../../components/feedback/StateBlock';
+import { useApiList } from '../../components/feedback/useApiList';
+import { readApiErrorMessage } from '@/lib/apiErrorMessage';
+import { preOrderStatusInfo } from '@/lib/order/orderStatus';
 import styles from './page.module.css';
 
 type Delivery = { preOrderId: string; status: string; preOrder: { quantity: number; batch: { cropName: string }; buyer: { name: string } } };
+type HandoverInput = { actualQuantity: string; proofUrl: string };
+
+function parseActualQuantity(raw: string, reservedQuantity: number) {
+  const parsed = Number(raw);
+  return raw.trim() === '' || !Number.isFinite(parsed) ? reservedQuantity : parsed;
+}
 
 export default function LogisticsDeliveries() {
-  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
-  const [actualQuantities, setActualQuantities] = useState<Record<string, number>>({});
-  const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
+  const { state, reload } = useApiList<Delivery>('/api/deliveries/mine');
+  const [handoverInputs, setHandoverInputs] = useState<Record<string, HandoverInput>>({});
+  const [confirming, setConfirming] = useState<Delivery | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  async function load() {
-    const res = await fetch('/api/deliveries/mine');
-    if (!res.ok) return;
-    setDeliveries(await res.json());
+  // TODO(business-confirm): empty actual quantity falls back to the reserved quantity; confirm this default with logistics/settlement owners.
+  function inputFor(preOrderId: string): HandoverInput {
+    return handoverInputs[preOrderId] ?? { actualQuantity: '', proofUrl: '' };
   }
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- idiomatic fetch-on-mount; not the cascading-render pattern this rule targets
-  useEffect(() => { load(); }, []);
+  function changeInput(preOrderId: string, patch: Partial<HandoverInput>) {
+    setHandoverInputs({ ...handoverInputs, [preOrderId]: { ...inputFor(preOrderId), ...patch } });
+  }
 
-  async function update(preOrderId: string, status: 'in_transit' | 'delivered', reservedQuantity?: number) {
-    const body: Record<string, unknown> = { status };
-    if (status === 'delivered') {
-      body.actualQuantity = actualQuantities[preOrderId] ?? reservedQuantity;
-      body.proofPhotoUrl = proofUrls[preOrderId] || undefined;
-    }
-    await fetch(`/api/deliveries/${preOrderId}`, {
+  async function updateStatus(preOrderId: string, body: Record<string, unknown>) {
+    setPendingId(preOrderId);
+    setActionError(null);
+    const res = await fetch(`/api/deliveries/${preOrderId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+    }).catch(() => null);
+    setPendingId(null);
+    if (!res || !res.ok) {
+      setActionError(await readApiErrorMessage(res));
+      return;
+    }
+    reload();
+  }
+
+  async function confirmDelivered() {
+    if (!confirming) return;
+    const input = inputFor(confirming.preOrderId);
+    await updateStatus(confirming.preOrderId, {
+      status: 'delivered',
+      actualQuantity: parseActualQuantity(input.actualQuantity, confirming.preOrder.quantity),
+      proofPhotoUrl: input.proofUrl || undefined,
     });
-    load();
+    setConfirming(null);
   }
 
   return (
     <AppShell role="logistics">
-      <div className={styles.page}>
-        <div>
-          <h1 className={styles.heading}>Giao hàng được giao</h1>
-          <p className={styles.subheading}>Theo dõi quá trình lấy hàng, vận chuyển và giao nhận.</p>
-        </div>
-
-        <div className={styles.list}>
-          {deliveries.length === 0 && <Card className={styles.empty}>Chưa có đơn giao hàng nào.</Card>}
-          {deliveries.map((d) => {
-            const status = preOrderStatusInfo(d.status);
-            return (
-              <Card key={d.preOrderId} className={styles.row}>
-                <div>
-                  <div className={styles.title}>{d.preOrder.batch.cropName}</div>
-                  <div className={styles.meta}>{d.preOrder.buyer.name}</div>
-                </div>
-                <StatusBadge label={status.label} tone={status.tone} />
-                {d.status === 'ready_for_handover' && <Button onClick={() => update(d.preOrderId, 'in_transit')}>Bắt đầu vận chuyển</Button>}
-                {d.status === 'in_transit' && (
-                  <div className={styles.handoverPanel}>
-                    <input
-                      type="number"
-                      placeholder={`Số lượng thực nhận (đặt ${d.preOrder.quantity})`}
-                      onChange={(e) => setActualQuantities({ ...actualQuantities, [d.preOrderId]: Number(e.target.value) })}
-                    />
-                    <input
-                      type="text"
-                      placeholder="URL ảnh bằng chứng bàn giao"
-                      onChange={(e) => setProofUrls({ ...proofUrls, [d.preOrderId]: e.target.value })}
-                    />
-                    <Button onClick={() => update(d.preOrderId, 'delivered', d.preOrder.quantity)}>Đã giao</Button>
+      <PageFrame>
+        <PageHeader eyebrow="Vận chuyển" title="Đơn giao hàng của tôi" description="Theo dõi quá trình lấy hàng, vận chuyển và giao nhận." />
+        {actionError && <p role="alert" className={styles.actionError}>{actionError}</p>}
+        {state.status === 'loading' && <LoadingSkeleton />}
+        {state.status === 'error' && <ErrorState message={state.message} onRetry={reload} />}
+        {state.status === 'ready' && state.items.length === 0 && (
+          <EmptyState title="Chưa có đơn giao hàng nào" hint="Đơn sẽ hiện ở đây khi được giao cho bạn." />
+        )}
+        {state.status === 'ready' && state.items.length > 0 && (
+          <div className={styles.list}>
+            {state.items.map((delivery) => {
+              const status = preOrderStatusInfo(delivery.status);
+              const input = inputFor(delivery.preOrderId);
+              return (
+                <Card key={delivery.preOrderId} className={styles.row}>
+                  <div>
+                    <div className={styles.title}>{delivery.preOrder.batch.cropName}</div>
+                    <div className={styles.meta}>{delivery.preOrder.buyer.name}</div>
                   </div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+                  <StatusBadge label={status.label} tone={status.tone} />
+                  {delivery.status === 'ready_for_handover' && (
+                    <Button
+                      onClick={() => updateStatus(delivery.preOrderId, { status: 'in_transit' })}
+                      loading={pendingId === delivery.preOrderId}
+                    >
+                      Bắt đầu vận chuyển
+                    </Button>
+                  )}
+                  {delivery.status === 'in_transit' && (
+                    <div className={styles.handoverPanel}>
+                      <label className={styles.field}>
+                        Số lượng thực nhận (đặt {delivery.preOrder.quantity.toLocaleString('vi-VN')})
+                        <input
+                          className={styles.input}
+                          type="number"
+                          min={1}
+                          step={1}
+                          inputMode="numeric"
+                          value={input.actualQuantity}
+                          onChange={(e) => changeInput(delivery.preOrderId, { actualQuantity: e.target.value })}
+                        />
+                      </label>
+                      <label className={styles.field}>
+                        Đường dẫn ảnh bằng chứng bàn giao
+                        <input
+                          className={styles.input}
+                          type="url"
+                          value={input.proofUrl}
+                          onChange={(e) => changeInput(delivery.preOrderId, { proofUrl: e.target.value })}
+                        />
+                      </label>
+                      <Button onClick={() => setConfirming(delivery)}>Đã giao</Button>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
+        <ConfirmDialog
+          open={confirming !== null}
+          title="Xác nhận đã giao hàng?"
+          description="Sau khi xác nhận, đơn chuyển sang trạng thái đã giao và không thể hoàn tác. Hãy kiểm tra lại số lượng thực nhận."
+          confirmLabel="Xác nhận đã giao"
+          loading={pendingId !== null}
+          onConfirm={confirmDelivered}
+          onCancel={() => setConfirming(null)}
+        />
+      </PageFrame>
     </AppShell>
   );
 }

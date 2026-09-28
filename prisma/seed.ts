@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from '../src/lib/db';
 import { DEMO_ACCOUNTS, DEMO_HARVEST_BATCHES, DEMO_PRE_ORDERS } from './seedData';
-import { createPreOrder } from '../src/lib/services/preOrderService';
+import { createPreOrder } from '../src/lib/order-services/preOrderService';
 import { advanceDemoPreOrder } from './seedPreOrderProgression';
 
 function demoPasswordHashForPhone(phone: string): string {

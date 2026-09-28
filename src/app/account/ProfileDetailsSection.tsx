@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Button } from '../components/Button';
+import { Button } from '../components/ui/Button';
 import { readAccountErrorMessage } from './accountErrors';
 import type { AccountProfile as Account } from '@/lib/services/accountService';
 import styles from './page.module.css';

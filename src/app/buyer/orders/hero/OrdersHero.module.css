@@ -1,0 +1,111 @@
+.hero {
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--color-mint-strong), var(--color-cream));
+  border: 1px solid var(--color-line);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--color-gold-cream);
+  opacity: 0.7;
+}
+
+.art {
+  position: relative;
+  max-width: 420px;
+  width: 100%;
+  justify-self: center;
+}
+
+.art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.art [data-motion='truck'] {
+  animation: drive 6s ease-in-out infinite alternate;
+}
+
+@keyframes drive {
+  from { transform: translate(140px, 62px); }
+  to { transform: translate(168px, 62px); }
+}
+
+.tiles {
+  position: relative;
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr 1fr;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  box-shadow: var(--shadow-soft);
+}
+
+.tileFeatured {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  color: var(--color-paper);
+}
+
+.tile:last-child {
+  grid-column: 1 / -1;
+}
+
+.tileValue {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-tight);
+  font-weight: 700;
+}
+
+.tile:not(:last-child) .tileValue {
+  font-size: calc(var(--font-size-md) * 2.6);
+}
+
+.tileLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-ink-muted);
+}
+
+.tileFeatured .tile:not(:last-child) .tileValue {
+  font-size: calc(var(--font-size-md) * 2.6);
+}
+
+.tileLabel {
+  color: var(--color-gold-cream);
+}
+
+@media (min-width: 900px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    align-items: center;
+    padding: var(--space-5);
+  }
+
+  .tiles { grid-template-columns: repeat(3, 1fr); }
+  .tile:last-child { grid-column: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art [data-motion='truck'] { animation: none; }
+}
