@@ -21,11 +21,22 @@ function assertValidPreOrderInput(input: CreatePreOrderInput) {
   }
 }
 
+async function assertShippingQuoteIsStored(buyerId: string, input: CreatePreOrderInput) {
+  if (input.deliveryMethod !== 'carrier') return;
+  const stored = await prisma.shippingQuote.count({
+    where: { batchId: input.batchId, buyerId, quantity: input.quantity, estimatedFee: input.shippingFeeQuote },
+  });
+  if (stored === 0) {
+    throw new ApiError('invalid_shipping_quote', 'Cước vận chuyển ước tính không khớp với báo giá đã lấy. Hãy lấy báo giá vận chuyển mới rồi gửi lại đơn.', 400);
+  }
+}
+
 export async function createPreOrder(buyerId: string, input: CreatePreOrderInput) {
   assertValidPreOrderInput(input);
   const batch = await prisma.harvestBatch.findUnique({ where: { id: input.batchId } });
   if (!batch) throw new ApiError('batch_not_found', 'Không tìm thấy lô hàng.', 404);
   if (batch.status !== 'open') throw new ApiError('batch_closed', 'Lô hàng này không còn mở đặt trước.', 400);
+  await assertShippingQuoteIsStored(buyerId, input);
   if (input.quantity < batch.minOrderQuantity) {
     throw new ApiError('below_min_order_quantity', `Số lượng đặt tối thiểu là ${batch.minOrderQuantity}.`, 400);
   }

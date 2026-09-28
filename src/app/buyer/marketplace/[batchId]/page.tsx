@@ -128,7 +128,7 @@ export default function BatchDetailPage() {
             <OrderFormCard
               batch={batch}
               quantity={quantity}
-              onQuantityChange={setQuantity}
+              onQuantityChange={(next) => { if (next !== quantity) { setQuantity(next); setQuote(null); } }}
               goodsAmount={goodsAmount}
               quantityIsValid={quantityIsValid}
               deliveryMethod={deliveryMethod}

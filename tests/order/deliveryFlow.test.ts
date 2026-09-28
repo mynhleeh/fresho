@@ -4,7 +4,7 @@ import { createPreOrder, confirmPreOrder } from '@/lib/order-services/preOrderSe
 import { payDeposit } from '@/lib/order-services/depositService';
 import { markBatchAwaitingHarvest, markBatchReadyForHandover, updateDeliveryStatus } from '@/lib/order-services/deliveryService';
 import { cleanupDb } from '../helpers/cleanup';
-import { confirmAndDeposit } from '../helpers/orderFlow';
+import { confirmAndDeposit, createStoredShippingQuote } from '../helpers/orderFlow';
 
 async function seedDepositedOrder(deliveryMethod: 'self_pickup' | 'carrier') {
   const farmer = await prisma.user.create({ data: { name: 'F', phone: '1', address: 'A', role: 'farmer', passwordHash: 'x' } });
@@ -12,7 +12,8 @@ async function seedDepositedOrder(deliveryMethod: 'self_pickup' | 'carrier') {
   const batch = await prisma.harvestBatch.create({
     data: { farmerId: farmer.id, cropName: 'Ca chua', quantityTotal: 100, quantityAvailable: 100, unit: 'kg', pricePerUnit: 10000, harvestDateEstimate: new Date() },
   });
-  const preOrder = await createPreOrder(buyer.id, { batchId: batch.id, quantity: 10, deliveryMethod, shippingFeeQuote: deliveryMethod === 'carrier' ? 50000 : undefined });
+  const shippingFeeQuote = deliveryMethod === 'carrier' ? await createStoredShippingQuote(batch.id, buyer.id, 10) : undefined;
+  const preOrder = await createPreOrder(buyer.id, { batchId: batch.id, quantity: 10, deliveryMethod, shippingFeeQuote });
   await confirmAndDeposit(preOrder.id, farmer.id);
   return { farmer, batch, preOrder };
 }

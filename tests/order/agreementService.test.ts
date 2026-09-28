@@ -4,7 +4,7 @@ import { createPreOrder, confirmPreOrder, transitionPreOrderStatus } from '@/lib
 import { markBatchAwaitingHarvest } from '@/lib/order-services/deliveryService';
 import { proposeSettlement, proposeCancel, respondToAgreement } from '@/lib/order-services/agreementService';
 import { cleanupDb } from '../helpers/cleanup';
-import { confirmAndDeposit } from '../helpers/orderFlow';
+import { confirmAndDeposit, createStoredShippingQuote } from '../helpers/orderFlow';
 
 type Seeded = Awaited<ReturnType<typeof seedDeposited>>;
 
@@ -17,9 +17,8 @@ async function seedDeposited(deliveryMethod: 'self_pickup' | 'carrier' = 'self_p
   const batch = await prisma.harvestBatch.create({
     data: { farmerId: farmer.id, cropName: 'Ca chua', quantityTotal: 100, quantityAvailable: 100, unit: 'kg', pricePerUnit: 10000, harvestDateEstimate: new Date() },
   });
-  const preOrder = await createPreOrder(buyer.id, {
-    batchId: batch.id, quantity: 10, deliveryMethod, shippingFeeQuote: deliveryMethod === 'carrier' ? 50000 : undefined,
-  });
+  const shippingFeeQuote = deliveryMethod === 'carrier' ? await createStoredShippingQuote(batch.id, buyer.id, 10) : undefined;
+  const preOrder = await createPreOrder(buyer.id, { batchId: batch.id, quantity: 10, deliveryMethod, shippingFeeQuote });
   await confirmAndDeposit(preOrder.id, farmer.id);
   return { farmer, buyer, stranger, batch, preOrder };
 }
@@ -68,6 +67,7 @@ describe('settlement agreement', () => {
 
   it('settles only after the farmer accepts, using the estimated shipping fee', async () => {
     const seeded = await seedDelivered('carrier');
+    const quotedFee = (await prisma.shippingQuote.findFirstOrThrow({ where: { buyerId: seeded.buyer.id } })).estimatedFee;
     const agreement = await proposeSettlement(seeded.preOrder.id, asBuyer(seeded), 10);
 
     const stillDelivered = await prisma.preOrder.findUnique({ where: { id: seeded.preOrder.id } });
@@ -77,9 +77,9 @@ describe('settlement agreement', () => {
 
     const settled = await prisma.preOrder.findUnique({ where: { id: seeded.preOrder.id }, include: { settlement: true } });
     expect(settled?.status).toBe('settled');
-    expect(settled?.settlement).toMatchObject({ finalQuantity: 10, finalGoodsAmount: 100000, shippingFee: 50000, finalPaymentAmount: 130000 });
+    expect(settled?.settlement).toMatchObject({ finalQuantity: 10, finalGoodsAmount: 100000, shippingFee: quotedFee, finalPaymentAmount: 100000 + quotedFee - 20000 });
     const finalPayments = await prisma.ledgerEntry.findMany({ where: { preOrderId: seeded.preOrder.id, type: 'final_payment' } });
-    expect(finalPayments.map((entry) => entry.amount)).toEqual([130000]);
+    expect(finalPayments.map((entry) => entry.amount)).toEqual([100000 + quotedFee - 20000]);
   });
 
   it('charges no shipping for a self-pickup order', async () => {

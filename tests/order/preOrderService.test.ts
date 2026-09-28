@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { prisma } from '@/lib/db';
 import { createPreOrder, transitionPreOrderStatus } from '@/lib/order-services/preOrderService';
 import { cleanupDb } from '../helpers/cleanup';
-import { confirmAndDeposit } from '../helpers/orderFlow';
+import { confirmAndDeposit, createStoredShippingQuote } from '../helpers/orderFlow';
 
 async function seedBatchAndBuyer() {
   const farmer = await prisma.user.create({ data: { name: 'F', phone: '1', address: 'A', role: 'farmer', passwordHash: 'x' } });
@@ -150,5 +150,41 @@ describe('pre_order concurrency and input guards', () => {
     await expect(createPreOrder(buyer.id, { batchId: batch.id, ...input })).rejects.toMatchObject({ code: 'invalid_input' });
 
     expect(await prisma.preOrder.count()).toBe(0);
+  });
+});
+
+describe('carrier shipping estimate must come from a stored quote', () => {
+  beforeEach(async () => {
+    await cleanupDb();
+  });
+
+  it('accepts the estimate of a quote stored for this buyer, batch and quantity', async () => {
+    const { buyer, batch } = await seedBatchAndBuyer();
+    const fee = await createStoredShippingQuote(batch.id, buyer.id, 10);
+
+    const preOrder = await createPreOrder(buyer.id, { batchId: batch.id, quantity: 10, deliveryMethod: 'carrier', shippingFeeQuote: fee });
+
+    expect(preOrder.shippingFeeQuote).toBe(fee);
+  });
+
+  it('rejects an estimate that matches no stored quote, such as a forged zero', async () => {
+    const { buyer, batch } = await seedBatchAndBuyer();
+    await createStoredShippingQuote(batch.id, buyer.id, 10);
+
+    await expect(createPreOrder(buyer.id, { batchId: batch.id, quantity: 10, deliveryMethod: 'carrier', shippingFeeQuote: 0 }))
+      .rejects.toMatchObject({ code: 'invalid_shipping_quote' });
+    expect(await prisma.preOrder.count()).toBe(0);
+  });
+
+  it('rejects a quote stored for another quantity or another buyer', async () => {
+    const { buyer, batch } = await seedBatchAndBuyer();
+    const otherBuyer = await prisma.user.create({ data: { name: 'B9', phone: '99', address: 'B', role: 'buyer', passwordHash: 'x' } });
+    const smallOrderFee = await createStoredShippingQuote(batch.id, buyer.id, 2);
+    const otherBuyerFee = await createStoredShippingQuote(batch.id, otherBuyer.id, 10);
+
+    await expect(createPreOrder(buyer.id, { batchId: batch.id, quantity: 10, deliveryMethod: 'carrier', shippingFeeQuote: smallOrderFee }))
+      .rejects.toMatchObject({ code: 'invalid_shipping_quote' });
+    await expect(createPreOrder(buyer.id, { batchId: batch.id, quantity: 10, deliveryMethod: 'carrier', shippingFeeQuote: otherBuyerFee }))
+      .rejects.toMatchObject({ code: 'invalid_shipping_quote' });
   });
 });
