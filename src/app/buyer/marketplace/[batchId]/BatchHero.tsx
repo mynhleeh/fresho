@@ -19,14 +19,25 @@ function describeHarvestCountdown(daysLeft: number): string {
 }
 
 function HeroVisual({ batch }: { batch: BuyerBatch }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+
   return (
     <div className={styles.visual}>
       <span className={styles.blobBack} aria-hidden="true" />
       <span className={styles.blobAccent} aria-hidden="true" />
       <div className={styles.frame}>
-        {batch.photoUrl ? (
+        {batch.photoUrl && batch.photoUrl !== failedUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
-          <img src={batch.photoUrl} alt={batch.cropName} className={styles.photo} width={520} height={420} decoding="async" />
+          <img
+            src={batch.photoUrl}
+            alt={batch.cropName}
+            className={styles.photo}
+            width={520}
+            height={420}
+            decoding="async"
+            fetchPriority="high"
+            onError={() => setFailedUrl(batch.photoUrl)}
+          />
         ) : (
           <CropScene cropName={batch.cropName} />
         )}

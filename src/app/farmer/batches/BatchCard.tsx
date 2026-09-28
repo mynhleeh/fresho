@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -30,12 +31,22 @@ const PLACEHOLDER_ICONS = {
 function BatchThumbnail({ batch }: { batch: Batch }) {
   const status = batchStatusInfo(batch.status);
   const dimmedClass = batch.isHidden ? styles.dimmed : '';
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   return (
     <div className={styles.thumbnailFrame}>
-      {batch.photoUrl ? (
+      {batch.photoUrl && batch.photoUrl !== failedUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
-        <img src={batch.photoUrl} alt={batch.cropName} className={`${styles.photo} ${dimmedClass}`} />
+        <img
+          src={batch.photoUrl}
+          alt={batch.cropName}
+          className={`${styles.photo} ${dimmedClass}`}
+          width={640}
+          height={360}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailedUrl(batch.photoUrl)}
+        />
       ) : (
         <ThumbnailPlaceholder batch={batch} dimmedClass={dimmedClass} />
       )}

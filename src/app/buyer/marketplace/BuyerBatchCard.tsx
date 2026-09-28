@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ButtonLink } from '../../components/ui/ButtonLink';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -31,7 +32,9 @@ const PLACEHOLDER_ICONS = {
 } as const;
 
 function BatchThumbnail({ batch }: { batch: BuyerBatch }) {
-  if (batch.photoUrl) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+
+  if (batch.photoUrl && batch.photoUrl !== failedUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
       <img
@@ -42,6 +45,7 @@ function BatchThumbnail({ batch }: { batch: BuyerBatch }) {
         height={220}
         loading="lazy"
         decoding="async"
+        onError={() => setFailedUrl(batch.photoUrl)}
       />
     );
   }

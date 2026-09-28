@@ -50,7 +50,6 @@ export type DemoHarvestBatch = {
   pricePerUnit: number;
   harvestDateOffsetDays: number;
   status: string;
-  photoUrl: string | null;
   location: string;
   qualityStandard?: string;
   minOrderQuantity?: number;
@@ -62,30 +61,26 @@ type CropTemplate = {
   cropName: string;
   unit: string;
   basePrice: number;
-  photoUrl: string;
   qualityStandard?: string;
 };
 
-// Demo-only stock photos from Wikimedia Commons (freely licensed, stable URLs), reused
-// across multiple farmers/batches on purpose to mimic several sellers of the same crop.
-// Local dev/demo use only — see 02-security-and-data.rule.md §6.
 const CROP_CATALOG: CropTemplate[] = [
-  { cropName: 'Xoài cát Hòa Lộc', unit: 'kg', basePrice: 35000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/af/Mango_fruit_Nam_Dok_Mai.jpg', qualityStandard: 'VietGAP' },
-  { cropName: 'Dưa leo loại 1', unit: 'kg', basePrice: 9000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/Harvested_vegetables%28Cucumbers%29.jpg' },
-  { cropName: 'Cà chua bi', unit: 'kg', basePrice: 22000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/ac/Yellow_cherry_tomatoes.jpg' },
-  { cropName: 'Lúa ST25', unit: 'kg', basePrice: 15000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/38/Road_and_paddy_fields_in_Sa_Pa%2C_Vietnam%2C_20240126_1202_3586.jpg' },
-  { cropName: 'Bưởi da xanh', unit: 'kg', basePrice: 28000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f3/Pomelo_fruit.jpg', qualityStandard: 'VietGAP' },
-  { cropName: 'Ổi Đài Loan', unit: 'kg', basePrice: 12000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/84/Goiaba_vermelha.jpg' },
-  { cropName: 'Khoai lang tím', unit: 'kg', basePrice: 6000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/44/Sweet_Potato_Harvest.jpg' },
-  { cropName: 'Sầu riêng Ri6', unit: 'kg', basePrice: 85000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/37/Durian_Fruit_in_Yunnan.jpg', qualityStandard: 'GlobalGAP' },
-  { cropName: 'Thanh long ruột đỏ', unit: 'kg', basePrice: 18000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Pitaya_%28dragon_fruit%29_in_West_Bengal%2C_India.jpg' },
-  { cropName: 'Cà phê nhân xô', unit: 'kg', basePrice: 65000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Coffee_cherries_on_bush_at_Fairview_Estate%2C_Kiambu%2C_KE.jpg' },
-  { cropName: 'Nhãn tiêu da bò', unit: 'kg', basePrice: 24000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Longan_fruit_flesh_%26_skin.jpg' },
-  { cropName: 'Chôm chôm Java', unit: 'kg', basePrice: 19000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/bb/Rambutans_with_seed.jpg' },
-  { cropName: 'Mít Thái', unit: 'kg', basePrice: 16000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/15/Jackfruit_Flesh.jpg' },
-  { cropName: 'Chuối già Nam Mỹ', unit: 'kg', basePrice: 8000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a9/Bunch_of_bananas_on_sale.jpg' },
-  { cropName: 'Dưa hấu không hạt', unit: 'kg', basePrice: 11000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Watermelon_yellow_2024_G1.jpg' },
-  { cropName: 'Vải thiều', unit: 'kg', basePrice: 30000, photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Lychee_fruits_and_seed.jpg' },
+  { cropName: 'Xoài cát Hòa Lộc', unit: 'kg', basePrice: 35000, qualityStandard: 'VietGAP' },
+  { cropName: 'Dưa leo loại 1', unit: 'kg', basePrice: 9000 },
+  { cropName: 'Cà chua bi', unit: 'kg', basePrice: 22000 },
+  { cropName: 'Lúa ST25', unit: 'kg', basePrice: 15000 },
+  { cropName: 'Bưởi da xanh', unit: 'kg', basePrice: 28000, qualityStandard: 'VietGAP' },
+  { cropName: 'Ổi Đài Loan', unit: 'kg', basePrice: 12000 },
+  { cropName: 'Khoai lang tím', unit: 'kg', basePrice: 6000 },
+  { cropName: 'Sầu riêng Ri6', unit: 'kg', basePrice: 85000, qualityStandard: 'GlobalGAP' },
+  { cropName: 'Thanh long ruột đỏ', unit: 'kg', basePrice: 18000 },
+  { cropName: 'Cà phê nhân xô', unit: 'kg', basePrice: 65000 },
+  { cropName: 'Nhãn tiêu da bò', unit: 'kg', basePrice: 24000 },
+  { cropName: 'Chôm chôm Java', unit: 'kg', basePrice: 19000 },
+  { cropName: 'Mít Thái', unit: 'kg', basePrice: 16000 },
+  { cropName: 'Chuối già Nam Mỹ', unit: 'kg', basePrice: 8000 },
+  { cropName: 'Dưa hấu không hạt', unit: 'kg', basePrice: 11000 },
+  { cropName: 'Vải thiều', unit: 'kg', basePrice: 30000 },
 ];
 
 const NEW_FARMER_PROFILES: { farmerKey: string; location: string }[] = [
@@ -128,7 +123,6 @@ function generateAdditionalFarmerBatches(): DemoHarvestBatch[] {
         pricePerUnit: Math.round((crop.basePrice * priceVariance) / 500) * 500,
         harvestDateOffsetDays: 3 + ((farmerIndex + slot) % 12),
         status,
-        photoUrl: slot % 5 === 4 ? null : crop.photoUrl,
         location: farmer.location,
         qualityStandard: crop.qualityStandard,
         minOrderQuantity: slot % 3 === 0 ? 20 : 1,
@@ -148,17 +142,17 @@ function generateAdditionalFarmerBatches(): DemoHarvestBatch[] {
 }
 
 // Diverse harvest_batch demo rows exercising every farmer batch-card state
-// (photo vs. placeholder, sold-out, awaiting_harvest, ready_for_handover, non-kg unit),
+// (sold-out, awaiting_harvest, ready_for_handover, non-kg unit),
 // plus 100 generated rows (10 farmers x 10 batches) from generateAdditionalFarmerBatches().
 export const DEMO_HARVEST_BATCHES: DemoHarvestBatch[] = [
-  { batchKey: 'farmer-a-mango', farmerKey: 'farmer-a', cropName: 'Xoài cát Hòa Lộc', quantityTotal: 500, quantityAvailable: 500, unit: 'kg', pricePerUnit: 35000, harvestDateOffsetDays: 10, status: 'open', photoUrl: '/uploads/batches/seed-mango.jpg', location: 'Cai Lay, Tien Giang', qualityStandard: 'VietGAP', description: 'Xoài cát Hòa Lộc chín tự nhiên, không dùng thuốc thúc chín. Đóng gói theo thùng xốp 10kg kèm lớp lót giấy chống dập. Có thể hái theo yêu cầu ngày cận giao.' },
-  { batchKey: 'farmer-a-cucumber', farmerKey: 'farmer-a', cropName: 'Dưa leo loại 1', quantityTotal: 800, quantityAvailable: 800, unit: 'kg', pricePerUnit: 9000, harvestDateOffsetDays: 7, status: 'open', photoUrl: null, location: 'Cu Chi, HCMC' },
-  { batchKey: 'farmer-a-tomato', farmerKey: 'farmer-a', cropName: 'Cà chua bi', quantityTotal: 300, quantityAvailable: 300, unit: 'kg', pricePerUnit: 22000, harvestDateOffsetDays: 2, status: 'open', photoUrl: null, location: 'Da Lat, Lam Dong' },
-  { batchKey: 'farmer-a-water-spinach', farmerKey: 'farmer-a', cropName: 'Rau muống', quantityTotal: 400, quantityAvailable: 0, unit: 'kg', pricePerUnit: 8000, harvestDateOffsetDays: 5, status: 'open', photoUrl: null, location: 'Hoc Mon, HCMC', preOrderStatus: 'deposited' },
-  { batchKey: 'farmer-a-rice', farmerKey: 'farmer-a', cropName: 'Lúa ST25', quantityTotal: 2000, quantityAvailable: 1200, unit: 'kg', pricePerUnit: 15000, harvestDateOffsetDays: 3, status: 'awaiting_harvest', photoUrl: null, location: 'Soc Trang', preOrderStatus: 'awaiting_harvest' },
-  { batchKey: 'farmer-a-pomelo', farmerKey: 'farmer-a', cropName: 'Bưởi da xanh', quantityTotal: 600, quantityAvailable: 200, unit: 'kg', pricePerUnit: 28000, harvestDateOffsetDays: 1, status: 'ready_for_handover', photoUrl: null, location: 'Ben Tre', preOrderStatus: 'ready_for_handover' },
-  { batchKey: 'farmer-a-guava', farmerKey: 'farmer-a', cropName: 'Ổi Đài Loan', quantityTotal: 50, quantityAvailable: 50, unit: 'thùng', pricePerUnit: 180000, harvestDateOffsetDays: 8, status: 'open', photoUrl: null, location: 'Long An' },
-  { batchKey: 'farmer-a-sweet-potato', farmerKey: 'farmer-a', cropName: 'Khoai lang tím', quantityTotal: 1000, quantityAvailable: 950, unit: 'kg', pricePerUnit: 6000, harvestDateOffsetDays: 12, status: 'open', photoUrl: null, location: 'Vinh Long', minOrderQuantity: 50 },
+  { batchKey: 'farmer-a-mango', farmerKey: 'farmer-a', cropName: 'Xoài cát Hòa Lộc', quantityTotal: 500, quantityAvailable: 500, unit: 'kg', pricePerUnit: 35000, harvestDateOffsetDays: 10, status: 'open', location: 'Cai Lay, Tien Giang', qualityStandard: 'VietGAP', description: 'Xoài cát Hòa Lộc chín tự nhiên, không dùng thuốc thúc chín. Đóng gói theo thùng xốp 10kg kèm lớp lót giấy chống dập. Có thể hái theo yêu cầu ngày cận giao.' },
+  { batchKey: 'farmer-a-cucumber', farmerKey: 'farmer-a', cropName: 'Dưa leo loại 1', quantityTotal: 800, quantityAvailable: 800, unit: 'kg', pricePerUnit: 9000, harvestDateOffsetDays: 7, status: 'open', location: 'Cu Chi, HCMC' },
+  { batchKey: 'farmer-a-tomato', farmerKey: 'farmer-a', cropName: 'Cà chua bi', quantityTotal: 300, quantityAvailable: 300, unit: 'kg', pricePerUnit: 22000, harvestDateOffsetDays: 2, status: 'open', location: 'Da Lat, Lam Dong' },
+  { batchKey: 'farmer-a-water-spinach', farmerKey: 'farmer-a', cropName: 'Rau muống', quantityTotal: 400, quantityAvailable: 0, unit: 'kg', pricePerUnit: 8000, harvestDateOffsetDays: 5, status: 'open', location: 'Hoc Mon, HCMC', preOrderStatus: 'deposited' },
+  { batchKey: 'farmer-a-rice', farmerKey: 'farmer-a', cropName: 'Lúa ST25', quantityTotal: 2000, quantityAvailable: 1200, unit: 'kg', pricePerUnit: 15000, harvestDateOffsetDays: 3, status: 'awaiting_harvest', location: 'Soc Trang', preOrderStatus: 'awaiting_harvest' },
+  { batchKey: 'farmer-a-pomelo', farmerKey: 'farmer-a', cropName: 'Bưởi da xanh', quantityTotal: 600, quantityAvailable: 200, unit: 'kg', pricePerUnit: 28000, harvestDateOffsetDays: 1, status: 'ready_for_handover', location: 'Ben Tre', preOrderStatus: 'ready_for_handover' },
+  { batchKey: 'farmer-a-guava', farmerKey: 'farmer-a', cropName: 'Ổi Đài Loan', quantityTotal: 50, quantityAvailable: 50, unit: 'thùng', pricePerUnit: 180000, harvestDateOffsetDays: 8, status: 'open', location: 'Long An' },
+  { batchKey: 'farmer-a-sweet-potato', farmerKey: 'farmer-a', cropName: 'Khoai lang tím', quantityTotal: 1000, quantityAvailable: 950, unit: 'kg', pricePerUnit: 6000, harvestDateOffsetDays: 12, status: 'open', location: 'Vinh Long', minOrderQuantity: 50 },
   ...generateAdditionalFarmerBatches(),
 ];
 
