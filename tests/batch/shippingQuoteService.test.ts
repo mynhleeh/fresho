@@ -57,4 +57,26 @@ describe('quoteShipping', () => {
     const rows = await prisma.shippingQuote.findMany({ where: { batchId: batch.id } });
     expect(rows).toHaveLength(2);
   });
+
+  it.each([
+    [{ quantity: 10, distanceKm: 0 }],
+    [{ quantity: 10, distanceKm: -12 }],
+    [{ quantity: 10, distanceKm: Number.NaN }],
+    [{ quantity: 10, distanceKm: 1.5 }],
+    [{ quantity: 10, distanceKm: 100000 }],
+    [{ quantity: 0, distanceKm: 10 }],
+    [{ quantity: 2.5, distanceKm: 10 }],
+    [{ quantity: Number.NaN, distanceKm: 10 }],
+  ])('rejects invalid quote inputs %j and stores nothing', async (input) => {
+    const farmer = await prisma.user.create({ data: { name: 'F', phone: '1', address: 'A', role: 'farmer' } });
+    const buyer = await prisma.user.create({ data: { name: 'B', phone: '2', address: 'B', role: 'buyer' } });
+    const batch = await prisma.harvestBatch.create({
+      data: { farmerId: farmer.id, cropName: 'Dua leo', quantityTotal: 1000, quantityAvailable: 1000, unit: 'kg', pricePerUnit: 12000, harvestDateEstimate: new Date() },
+    });
+
+    await expect(quoteShipping({ batchId: batch.id, buyerId: buyer.id, vehicleType: 'motorbike', ...input }))
+      .rejects.toMatchObject({ code: 'invalid_input' });
+
+    expect(await prisma.shippingQuote.count()).toBe(0);
+  });
 });

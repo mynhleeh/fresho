@@ -31,6 +31,17 @@ const STORAGE_REQUIREMENT: Record<VehicleType, string> = {
   refrigerated_truck: 'Bảo quản lạnh liên tục',
 };
 
+const MAX_DISTANCE_KM = 2000;
+
+function assertValidQuoteInput(quantity: number, distanceKm: number) {
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    throw new ApiError('invalid_input', 'Số lượng để báo giá vận chuyển phải là số nguyên lớn hơn 0.', 400);
+  }
+  if (!Number.isInteger(distanceKm) || distanceKm <= 0 || distanceKm > MAX_DISTANCE_KM) {
+    throw new ApiError('invalid_input', `Khoảng cách vận chuyển phải là số nguyên km từ 1 đến ${MAX_DISTANCE_KM}.`, 400);
+  }
+}
+
 export async function quoteShipping(input: {
   batchId: string;
   buyerId: string;
@@ -38,6 +49,7 @@ export async function quoteShipping(input: {
   vehicleType: VehicleType;
   distanceKm: number;
 }) {
+  assertValidQuoteInput(input.quantity, input.distanceKm);
   const batch = await prisma.harvestBatch.findUnique({ where: { id: input.batchId } });
   if (!batch) throw new ApiError('batch_not_found', 'Không tìm thấy lô hàng.', 404);
 
