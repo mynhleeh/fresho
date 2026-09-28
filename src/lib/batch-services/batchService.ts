@@ -41,6 +41,19 @@ export async function createBatch(
   });
 }
 
+const BUYER_BATCH_CARD_SELECT = {
+  id: true,
+  cropName: true,
+  quantityAvailable: true,
+  quantityTotal: true,
+  unit: true,
+  pricePerUnit: true,
+  location: true,
+  harvestDateEstimate: true,
+  photoUrl: true,
+  farmer: { select: { name: true, avatarUrl: true, trustScore: true } },
+} as const;
+
 export async function listOpenBatches(filter?: {
   cropName?: string;
   minPricePerUnit?: number;
@@ -78,17 +91,18 @@ export async function listOpenBatches(filter?: {
           }
         : {}),
   };
-  const orderBy =
+  const primaryOrderBy =
     filter?.sortBy === 'harvestDate'
       ? { harvestDateEstimate: 'asc' as const }
       : filter?.sortBy === 'trustScore'
         ? { farmer: { trustScore: 'desc' as const } }
         : { createdAt: 'desc' as const };
+  const orderBy = [primaryOrderBy, { id: 'asc' as const }];
 
   const [items, total] = await Promise.all([
     prisma.harvestBatch.findMany({
       where,
-      include: { farmer: { select: { name: true, avatarUrl: true, trustScore: true } } },
+      select: BUYER_BATCH_CARD_SELECT,
       orderBy,
       ...(filter?.offset !== undefined ? { skip: filter.offset } : {}),
       ...(filter?.limit !== undefined ? { take: filter.limit } : {}),

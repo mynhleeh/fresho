@@ -148,8 +148,8 @@ describe('listOpenBatches', () => {
 
     const { items } = await listOpenBatches({ sortBy: 'trustScore' });
 
-    expect(items[0].farmerId).toBe(highTrust.id);
-    expect(items[1].farmerId).toBe(lowTrust.id);
+    expect(items[0].farmer.trustScore).toBe(90);
+    expect(items[1].farmer.trustScore).toBe(10);
   });
 
   it('paginates results using limit and offset while reporting the full total', async () => {
