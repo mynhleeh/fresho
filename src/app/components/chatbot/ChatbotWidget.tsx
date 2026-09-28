@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { ChatbotFaqEntry, ChatbotRole } from '@/lib/chatbot/chatbotFaq';
-import { entriesForRole, matchChatbotQuestion } from '@/lib/chatbot/matchChatbotQuestion';
+import { matchChatbotQuestion } from '@/lib/chatbot/matchChatbotQuestion';
 import { ChatbotAnswerCard } from './ChatbotAnswerCard';
 import styles from './ChatbotWidget.module.css';
 
@@ -13,7 +13,10 @@ const GREETING_BY_ROLE: Record<ChatbotRole, string> = {
   buyer: 'Chào anh/chị! Mình là Cố vấn mùa vụ. Mình có thể phân tích nên mua lô nào, thời điểm giá tốt, rủi ro thời tiết và cách chọn vận chuyển.',
 };
 
-const FALLBACK_TEXT = 'Mình chưa có phân tích cho câu hỏi này. Anh/chị thử một trong các câu gợi ý bên dưới nhé.';
+const FALLBACK_BY_ROLE: Record<ChatbotRole, string> = {
+  farmer: 'Mình chưa có phân tích cho câu hỏi này. Anh/chị có thể hỏi về thời điểm đăng lô, giá thị trường, thời tiết khi thu hoạch, nên trồng gì vụ tới hoặc có nên nhận một đơn đặt trước.',
+  buyer: 'Mình chưa có phân tích cho câu hỏi này. Anh/chị có thể hỏi có nên mua một lô, thời điểm giá tốt, ảnh hưởng của thời tiết, cách chọn vận chuyển hoặc độ uy tín của nông dân.',
+};
 
 type ChatMessage =
   | { id: number; from: 'user'; text: string }
@@ -31,26 +34,9 @@ function SproutMark({ className }: { className?: string }) {
   );
 }
 
-function SuggestionChips({ role, onPick }: { role: ChatbotRole; onPick: (question: string) => void }) {
-  return (
-    <div className={styles.chips}>
-      {entriesForRole(role).map((entry) => (
-        <button key={entry.id} type="button" className={styles.chip} onClick={() => onPick(entry.question)}>
-          {entry.question}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function BotMessage({ entry, role, onPick }: { entry: ChatbotFaqEntry | null; role: ChatbotRole; onPick: (question: string) => void }) {
+function BotMessage({ entry, role }: { entry: ChatbotFaqEntry | null; role: ChatbotRole }) {
   if (entry) return <ChatbotAnswerCard answer={entry.answer} />;
-  return (
-    <div className={styles.botBubble}>
-      <p>{FALLBACK_TEXT}</p>
-      <SuggestionChips role={role} onPick={onPick} />
-    </div>
-  );
+  return <p className={styles.botBubble}>{FALLBACK_BY_ROLE[role]}</p>;
 }
 
 function TypingIndicator() {
@@ -108,15 +94,12 @@ function ChatPanel({ role, onClose }: { role: ChatbotRole; onClose: () => void }
         <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Đóng cố vấn">×</button>
       </header>
       <div className={styles.thread} aria-live="polite">
-        <div className={styles.botBubble}>
-          <p>{GREETING_BY_ROLE[role]}</p>
-          <SuggestionChips role={role} onPick={askQuestion} />
-        </div>
+        <p className={styles.botBubble}>{GREETING_BY_ROLE[role]}</p>
         {messages.map((message, index) => (
           <div key={message.id} ref={index === messages.length - 1 ? latestMessage : undefined} className={styles.messageRow}>
             {message.from === 'user'
               ? <p className={styles.userBubble}>{message.text}</p>
-              : <BotMessage entry={message.entry} role={role} onPick={askQuestion} />}
+              : <BotMessage entry={message.entry} role={role} />}
           </div>
         ))}
         {isTyping && <TypingIndicator />}

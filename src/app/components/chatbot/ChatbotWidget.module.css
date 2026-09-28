@@ -31,7 +31,6 @@
 }
 
 .launcher:focus-visible,
-.chip:focus-visible,
 .closeButton:focus-visible,
 .sendButton:focus-visible,
 .composerInput:focus-visible {
@@ -156,32 +155,6 @@
   font-size: var(--font-size-md);
   line-height: var(--line-height-body);
   animation: message-in 0.28s var(--ease-standard);
-}
-
-.chips {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-}
-
-.chip {
-  min-height: var(--touch-target-min);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-sm);
-  background: var(--color-mint);
-  color: var(--color-leaf-dark);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--duration-fast) ease, transform var(--duration-fast) ease;
-}
-
-.chip:hover {
-  background: var(--color-mint-strong);
-  transform: translateX(3px);
 }
 
 .answerCard {
