@@ -16,6 +16,7 @@ import {
   type DashboardKpi,
   type HorizonEntry,
 } from '@/lib/dashboardSummary';
+import { toThumbnailSrc } from './thumbnailSrc';
 
 type Batch = { id: string; cropName: string; photoUrl?: string | null; unit: string; status: string; quantityTotal: number; quantityAvailable: number; harvestDateEstimate: string };
 type Deposit = { amount: number; status: string };
@@ -115,15 +116,20 @@ function loadRoleSnapshot(role: AppRole, today: Date): Promise<RoleSnapshot> {
   return loadLogisticsSnapshot();
 }
 
+function withThumbnailPhoto(order: DashboardOrder): DashboardOrder {
+  return { ...order, batch: { ...order.batch, photoUrl: toThumbnailSrc(order.batch.photoUrl) } };
+}
+
 function summarizeSnapshot(snapshot: RoleSnapshot, today: Date) {
   const { stages, closedCount } = countOrdersByStage(snapshot.orders);
-  const recentOrders = [...snapshot.orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, RECENT_ORDER_LIMIT);
+  const recentOrders = [...snapshot.orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, RECENT_ORDER_LIMIT).map(withThumbnailPhoto);
+  const horizonEntries = snapshot.horizonEntries.map((entry) => ({ ...entry, photoUrl: toThumbnailSrc(entry.photoUrl) }));
   return {
     kpis: snapshot.kpis,
     stages,
     closedCount,
     recentOrders,
-    horizon: buildHarvestHorizon(snapshot.horizonEntries, today),
+    horizon: buildHarvestHorizon(horizonEntries, today),
     actionItems: snapshot.actionItems,
   };
 }
