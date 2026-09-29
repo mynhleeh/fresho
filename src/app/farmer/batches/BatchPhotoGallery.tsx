@@ -1,5 +1,6 @@
 'use client';
 import { useRef } from 'react';
+import Image from 'next/image';
 import { CameraIcon } from '../../components/ui/icons';
 import styles from './BatchPhotoGallery.module.css';
 
@@ -11,6 +12,8 @@ export type GalleryPhoto = {
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const MAX_GALLERY_PHOTOS = 6;
+const THUMB_PIXELS = 256;
+const THUMB_SIZES = '(max-width: 600px) 33vw, 200px';
 
 function isImageFile(file: File) {
   return ALLOWED_TYPES.includes(file.type);
@@ -44,11 +47,14 @@ export function BatchPhotoGallery(props: {
       <div className={styles.grid}>
         {photos.map((photo, index) => (
           <div key={photo.key} className={styles.thumb}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- local uploads/blob previews, no remote-image optimization config needed for demo scope */}
-            <img
+            <Image
               src={photo.url}
               alt={photo.isCover ? 'Ảnh bìa mùa vụ' : `Ảnh mùa vụ ${index + 1}`}
               className={styles.thumbImage}
+              width={THUMB_PIXELS}
+              height={THUMB_PIXELS}
+              sizes={THUMB_SIZES}
+              unoptimized={!photo.url.startsWith('/')}
             />
             {photo.isCover ? (
               <span className={styles.coverBadge}>Ảnh bìa</span>
