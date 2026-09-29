@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import Image from 'next/image';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -29,6 +30,8 @@ const PLACEHOLDER_ICONS = {
   basket: BasketIcon,
 } as const;
 
+const PHOTO_SIZES = '(max-width: 600px) 100vw, 400px';
+
 const harvestDateFormat = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' });
 
 function ThumbnailPlaceholder({ batch, dimmedClass }: { batch: Batch; dimmedClass: string }) {
@@ -49,15 +52,16 @@ function BatchThumbnail({ batch }: { batch: Batch }) {
   return (
     <div className={styles.thumbnailFrame}>
       {batch.photoUrl && batch.photoUrl !== failedUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={batch.photoUrl}
           alt={batch.cropName}
           className={`${styles.photo} ${dimmedClass}`}
           width={640}
           height={360}
+          sizes={PHOTO_SIZES}
           loading="lazy"
           decoding="async"
+          unoptimized={!batch.photoUrl.startsWith('/')}
           onError={() => setFailedUrl(batch.photoUrl)}
         />
       ) : (
