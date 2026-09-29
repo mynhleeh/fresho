@@ -10,6 +10,10 @@ import styles from './BatchHero.module.css';
 const DAY_IN_MS = 86_400_000;
 const PHOTO_SIZES = '(max-width: 900px) 100vw, 520px';
 
+function isSameOriginPath(photoUrl: string): boolean {
+  return photoUrl.startsWith('/') && !photoUrl.startsWith('//');
+}
+
 function formatHarvestDate(isoDate: string): string {
   return new Date(isoDate).toLocaleDateString('vi-VN');
 }
@@ -38,7 +42,7 @@ function HeroVisual({ batch }: { batch: BuyerBatch }) {
             sizes={PHOTO_SIZES}
             decoding="async"
             fetchPriority="high"
-            unoptimized={!batch.photoUrl.startsWith('/')}
+            unoptimized={!isSameOriginPath(batch.photoUrl)}
             onError={() => setFailedUrl(batch.photoUrl)}
           />
         ) : (

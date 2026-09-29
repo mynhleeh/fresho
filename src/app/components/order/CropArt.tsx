@@ -114,7 +114,7 @@ function PhotoBlob({ photoUrl, className, onError }: { photoUrl: string; classNa
 export function CropArt({ cropName, photoUrl, className }: { cropName: string; photoUrl?: string | null; className?: string }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   if (photoUrl && photoUrl !== failedUrl) {
-    return <PhotoBlob photoUrl={photoUrl} className={className} onError={() => setFailedUrl(photoUrl)} />;
+    return <PhotoBlob key={photoUrl} photoUrl={photoUrl} className={className} onError={() => setFailedUrl(photoUrl)} />;
   }
   const Produce = PRODUCE[cropKindOf(cropName)];
   return (
