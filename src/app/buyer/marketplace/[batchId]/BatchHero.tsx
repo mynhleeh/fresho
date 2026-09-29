@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '../../../components/ui/Button';
 import { formatVnd } from '../../../components/order/MoneySummaryRow';
 import { LeafIcon } from '../../../components/ui/icons';
@@ -7,6 +8,7 @@ import { CropScene } from './CropScene';
 import styles from './BatchHero.module.css';
 
 const DAY_IN_MS = 86_400_000;
+const PHOTO_SIZES = '(max-width: 900px) 100vw, 520px';
 
 function formatHarvestDate(isoDate: string): string {
   return new Date(isoDate).toLocaleDateString('vi-VN');
@@ -27,15 +29,16 @@ function HeroVisual({ batch }: { batch: BuyerBatch }) {
       <span className={styles.blobAccent} aria-hidden="true" />
       <div className={styles.frame}>
         {batch.photoUrl && batch.photoUrl !== failedUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- local uploads, no remote-image optimization config needed for demo scope
-          <img
+          <Image
             src={batch.photoUrl}
             alt={batch.cropName}
             className={styles.photo}
             width={520}
             height={420}
+            sizes={PHOTO_SIZES}
             decoding="async"
             fetchPriority="high"
+            unoptimized={!batch.photoUrl.startsWith('/')}
             onError={() => setFailedUrl(batch.photoUrl)}
           />
         ) : (
