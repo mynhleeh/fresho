@@ -16,7 +16,7 @@ import {
   type DashboardKpi,
   type HorizonEntry,
 } from '@/lib/dashboardSummary';
-import { toThumbnailSrc } from './thumbnailSrc';
+import { toPhotoThumbnailSrc } from '@/lib/photoThumbnail';
 
 type Batch = { id: string; cropName: string; photoUrl?: string | null; unit: string; status: string; quantityTotal: number; quantityAvailable: number; harvestDateEstimate: string };
 type Deposit = { amount: number; status: string };
@@ -30,6 +30,7 @@ export type DashboardData = ReturnType<typeof summarizeSnapshot>;
 
 const ACTIVE_ORDER_STATUSES = ['pending_confirmation', 'negotiating', 'deposited', 'awaiting_harvest', 'ready_for_handover', 'in_transit'];
 const RECENT_ORDER_LIMIT = 5;
+const DASHBOARD_THUMBNAIL_WIDTH = 96;
 
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
@@ -116,14 +117,18 @@ function loadRoleSnapshot(role: AppRole, today: Date): Promise<RoleSnapshot> {
   return loadLogisticsSnapshot();
 }
 
+function toDashboardThumbnail(photoUrl: string | null | undefined): string | null | undefined {
+  return photoUrl ? toPhotoThumbnailSrc(photoUrl, DASHBOARD_THUMBNAIL_WIDTH) : photoUrl;
+}
+
 function withThumbnailPhoto(order: DashboardOrder): DashboardOrder {
-  return { ...order, batch: { ...order.batch, photoUrl: toThumbnailSrc(order.batch.photoUrl) } };
+  return { ...order, batch: { ...order.batch, photoUrl: toDashboardThumbnail(order.batch.photoUrl) } };
 }
 
 function summarizeSnapshot(snapshot: RoleSnapshot, today: Date) {
   const { stages, closedCount } = countOrdersByStage(snapshot.orders);
   const recentOrders = [...snapshot.orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, RECENT_ORDER_LIMIT).map(withThumbnailPhoto);
-  const horizonEntries = snapshot.horizonEntries.map((entry) => ({ ...entry, photoUrl: toThumbnailSrc(entry.photoUrl) }));
+  const horizonEntries = snapshot.horizonEntries.map((entry) => ({ ...entry, photoUrl: toDashboardThumbnail(entry.photoUrl) }));
   return {
     kpis: snapshot.kpis,
     stages,
