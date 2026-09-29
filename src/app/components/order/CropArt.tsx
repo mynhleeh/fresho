@@ -1,5 +1,8 @@
 'use client';
 import { useId, useState, type ReactNode } from 'react';
+import { toPhotoThumbnailSrc } from '@/lib/photoThumbnail';
+
+const ART_THUMBNAIL_WIDTH = 384;
 
 type CropKind = 'fruit' | 'tomato' | 'long' | 'grain' | 'root' | 'leafy';
 
@@ -93,13 +96,17 @@ const BLOB_PATH = 'M60 6 C 96 6, 114 34, 112 66 C 110 98, 78 116, 48 112 C 16 10
 
 function PhotoBlob({ photoUrl, className, onError }: { photoUrl: string; className?: string; onError: () => void }) {
   const clipId = useId();
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const thumbnailSrc = toPhotoThumbnailSrc(photoUrl, ART_THUMBNAIL_WIDTH);
+  const src = thumbnailFailed ? photoUrl : thumbnailSrc;
+  const handleError = () => (src === photoUrl ? onError() : setThumbnailFailed(true));
   return (
     <svg viewBox="0 0 120 120" className={className} aria-hidden="true" focusable="false">
       <defs>
         <clipPath id={clipId}><path d={BLOB_PATH} /></clipPath>
       </defs>
       <path d={BLOB_PATH} fill="var(--color-mint-strong)" />
-      <image href={photoUrl} width="120" height="120" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} onError={onError} />
+      <image href={src} width="120" height="120" preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} onError={handleError} />
     </svg>
   );
 }
